@@ -94,6 +94,27 @@ export const callNotes = sqliteTable("call_notes", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
+// Agent-generated reply drafts. Never sent directly — a designer approves,
+// edits, or dismisses every one (the human-oversight gate).
+export const drafts = sqliteTable("drafts", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  threadId: integer("thread_id")
+    .notNull()
+    .references(() => threads.id),
+  body: text("body").notNull(),
+  // Open questions the agent couldn't answer from context — designer must resolve
+  flags: text("flags", { mode: "json" }).$type<string[]>().notNull(),
+  status: text("status", { enum: ["pending", "approved", "dismissed"] }).notNull(),
+  // What the designer actually sent (may differ from body) — the edit distance
+  // between body and sentBody is the core draft-quality eval signal
+  sentBody: text("sent_body"),
+  model: text("model").notNull(),
+  // Exact context the agent saw when drafting — audit trail now, eval dataset later
+  promptContext: text("prompt_context", { mode: "json" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  resolvedAt: integer("resolved_at", { mode: "timestamp" }),
+});
+
 // Structured trip questionnaires as submitted by the client
 export const intakeForms = sqliteTable("intake_forms", {
   id: integer("id").primaryKey({ autoIncrement: true }),
