@@ -125,3 +125,103 @@ body::before {
     animation: none;
   }
 }
+
+/* Landing hero: pure-CSS Tuscan sunset scene */
+.landing-sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #f5be7e 0%, #f3cfa2 30%, #f0ddc2 55%, #efe7d8 100%);
+}
+
+.landing-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    45% 35% at 50% 18%,
+    rgba(255, 236, 200, 0.9),
+    rgba(245, 190, 126, 0) 70%
+  );
+  animation: sunset-breathe 14s ease-in-out infinite alternate;
+}
+
+.landing-hill-1,
+.landing-hill-2,
+.landing-hill-3 {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  border-radius: 100% 100% 0 0 / 220px;
+}
+
+.landing-hill-1 {
+  bottom: -4%;
+  height: 34%;
+  background: rgba(217, 185, 140, 0.5);
+}
+
+.landing-hill-2 {
+  bottom: -6%;
+  left: -15%;
+  width: 130%;
+  height: 26%;
+  background: rgba(196, 161, 118, 0.65);
+}
+
+.landing-hill-3 {
+  bottom: -8%;
+  height: 18%;
+  background: rgba(169, 136, 94, 0.8);
+}
+
+.landing-fog {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent, rgba(239, 231, 216, 0.55));
+}
+
+@keyframes sunset-breathe {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-glow {
+    animation: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .landing-sky {
+    background: linear-gradient(180deg, #8a5a33 0%, #5c3f2b 40%, #3a2a22 100%);
+  }
+
+  .landing-glow {
+    background: radial-gradient(
+      45% 35% at 50% 18%,
+      rgba(200, 150, 100, 0.35),
+      rgba(138, 90, 51, 0) 70%
+    );
+  }
+
+  .landing-hill-1 {
+    background: rgba(90, 68, 48, 0.55);
+  }
+
+  .landing-hill-2 {
+    background: rgba(66, 48, 34, 0.7);
+  }
+
+  .landing-hill-3 {
+    background: rgba(42, 30, 22, 0.85);
+  }
+
+  .landing-fog {
+    background: linear-gradient(180deg, transparent, rgba(58, 42, 34, 0.5));
+  }
+}

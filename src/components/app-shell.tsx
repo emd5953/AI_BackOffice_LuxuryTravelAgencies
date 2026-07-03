@@ -12,7 +12,7 @@ const NAV_ITEMS = [
 ] as const;
 
 function isActive(pathname: string, href: string) {
-  if (href === "/today") return pathname === "/" || pathname.startsWith("/today");
+  if (href === "/today") return pathname === "/today" || pathname.startsWith("/today/");
   return pathname.startsWith(href);
 }
 
@@ -24,11 +24,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     day: "numeric",
   });
 
+  if (pathname === "/") {
+    return <>{children}</>;
+  }
+
   return (
     <>
       <div className="fixed top-4 left-4 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-1 overflow-x-auto rounded-full bg-surface-raised px-2 py-1.5 shadow-float">
-        <Link href="/today" className="shrink-0 px-2 font-display text-base text-ink">
-          Meridian
+        <Link href="/" className="shrink-0 px-2 font-display text-base text-ink">
+          Analogue
         </Link>
         <span className="h-4 w-px shrink-0 bg-hairline" />
         <nav className="flex shrink-0 items-center gap-1">
