@@ -63,3 +63,6 @@ next-env.d.ts
 
 # local sqlite
 local.db*
+
+# raw session transcripts contain env secrets - keep local
+docs/transcripts/*.jsonl
