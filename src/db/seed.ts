@@ -1,4 +1,4 @@
-import { db } from "./index";
+import { loadEnvConfig } from "@next/env";
 import {
   clients,
   clientPreferences,
@@ -16,6 +16,8 @@ import {
   suggestions,
 } from "./schema";
 
+loadEnvConfig(process.cwd());
+
 // Deterministic seed for a fictional agency: Meridian Private Travel.
 // Designer persona: Elena Voss <elena@meridianprivate.com>
 
@@ -29,6 +31,8 @@ function daysAgo(n: number, hour = 10): Date {
 }
 
 async function seed() {
+  const { db } = await import("./index");
+
   // Idempotent: wipe in FK-safe order
   await db.delete(suggestions);
   await db.delete(evalResults);
@@ -46,7 +50,7 @@ async function seed() {
   await db.delete(clients);
 
   // ---------- Clients ----------
-  const [meyer, ashford, chen] = await db
+  const [meyer, ashford, chen, rao, ortega] = await db
     .insert(clients)
     .values([
       {
@@ -67,11 +71,23 @@ async function seed() {
         bio: "SF-based VC. Books late, decides fast, never fills out forms. Will take a phone call over an email chain every time.",
         createdAt: daysAgo(200),
       },
+      {
+        name: "Priya & Anil Rao",
+        email: "priya@raofamilyoffice.com",
+        bio: "Singapore-based family office. Three-generation trips: Priya, Anil, their twins age 7, and Priya's father. Priya is detail-oriented and kind, Anil cares about privacy and direct flights.",
+        createdAt: daysAgo(150),
+      },
+      {
+        name: "Javier & Lucia Ortega",
+        email: "lucia.ortega@atelierortega.mx",
+        bio: "Mexico City art collectors. They travel for food, private access, and craftsmanship. Lucia sends voice-note style emails with many details; Javier wants numbers and cancellation terms.",
+        createdAt: daysAgo(70),
+      },
     ])
     .returning();
 
   // ---------- Trips ----------
-  const [meyerPatagonia, ashfordJapan, chenKenya] = await db
+  const [meyerPatagonia, ashfordJapan, chenKenya, raoMaldives, ortegaSicily] = await db
     .insert(trips)
     .values([
       {
@@ -105,11 +121,45 @@ async function seed() {
         budgetUsd: 40000,
         createdAt: daysAgo(3),
       },
+      {
+        clientId: rao.id,
+        title: "Rao family — Maldives winter break",
+        destination: "Noonu Atoll, Maldives",
+        status: "planning",
+        startDate: "2026-12-18",
+        endDate: "2026-12-27",
+        partySize: 5,
+        budgetUsd: 120000,
+        createdAt: daysAgo(18),
+      },
+      {
+        clientId: ortega.id,
+        title: "Ortega — Sicily food & craft",
+        destination: "Palermo, Noto & Mount Etna, Sicily",
+        status: "inquiry",
+        startDate: "2026-10-03",
+        endDate: "2026-10-12",
+        partySize: 2,
+        budgetUsd: 70000,
+        createdAt: daysAgo(9),
+      },
     ])
     .returning();
 
   // ---------- Suppliers ----------
-  const [explora, awasi, tierra, hiiragiya, tokyoDmc] = await db
+  const [
+    explora,
+    awasi,
+    tierra,
+    hiiragiya,
+    tokyoDmc,
+    angama,
+    safariArchitects,
+    soneva,
+    joali,
+    sicilianRoads,
+    villaSantAndrea,
+  ] = await db
     .insert(suppliers)
     .values([
       {
@@ -156,6 +206,60 @@ async function seed() {
         contactEmail: "sota@kanpaijourneys.example",
         commissionPct: 15,
         notes: "Ground handling across Japan. Excellent private guides; ask for Yuki for food-focused days.",
+      },
+      {
+        name: "Angama Mara",
+        type: "lodge",
+        location: "Masai Mara, Kenya",
+        contactName: "Njeri Wanjiru",
+        contactEmail: "reservations@angama.example",
+        commissionPct: 10,
+        notes: "Strong for short-notice VIPs. Helicopter picnic can be arranged if weather allows.",
+      },
+      {
+        name: "Safari Architects",
+        type: "dmc",
+        location: "Nairobi, Kenya",
+        contactName: "Tom Okello",
+        contactEmail: "tom@safariarchitects.example",
+        commissionPct: 15,
+        notes: "Excellent meet-and-assist and internal air handling. Replies fast but often quotes gross package totals.",
+      },
+      {
+        name: "Soneva Jani",
+        type: "hotel",
+        location: "Noonu Atoll, Maldives",
+        contactName: "Aisha Latheef",
+        contactEmail: "reservations@sonevajani.example",
+        commissionPct: 10,
+        notes: "Best fit for families wanting space and privacy. Taxes and service often written as ++.",
+      },
+      {
+        name: "JOALI Maldives",
+        type: "hotel",
+        location: "Raa Atoll, Maldives",
+        contactName: "Mila Petrovic",
+        contactEmail: "sales@joali.example",
+        commissionPct: 12,
+        notes: "Polished service, strong wellness, more design-forward than barefoot. Seaplane windows can be tight.",
+      },
+      {
+        name: "Sicilian Roads",
+        type: "dmc",
+        location: "Palermo, Sicily",
+        contactName: "Alessandra Greco",
+        contactEmail: "alessandra@sicilianroads.example",
+        commissionPct: 15,
+        notes: "Private access to artisans and family wineries. Cancellation terms vary by villa partner.",
+      },
+      {
+        name: "Villa Sant'Andrea, A Belmond Hotel",
+        type: "hotel",
+        location: "Taormina Mare, Sicily",
+        contactName: "Giulia Romano",
+        contactEmail: "reservations@villasantandrea.example",
+        commissionPct: 10,
+        notes: "Great beach finale after Palermo/Etna. Suites sell out early during October events.",
       },
     ])
     .returning();
@@ -384,6 +488,390 @@ Victoria`,
     },
   ]);
 
+  // 3b. Ashford supplier threads — Japan quote and availability details
+  const [hiiragiyaThread] = await db
+    .insert(threads)
+    .values({
+      subject: "Re: Ashford anniversary stay — November",
+      counterpartType: "supplier",
+      supplierId: hiiragiya.id,
+      tripId: ashfordJapan.id,
+      lastMessageAt: daysAgo(4, 9),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: hiiragiyaThread.id,
+      direction: "outbound",
+      fromAddr: DESIGNER,
+      toAddr: hiiragiya.contactEmail,
+      body: `Dear Keiko,
+
+May I check availability for two adults, 5-9 November 2026? This is a 30th wedding anniversary. They need a shellfish-free kaiseki option for medical reasons.
+
+Warmly,
+Elena`,
+      sentAt: daysAgo(6, 11),
+    },
+    {
+      threadId: hiiragiyaThread.id,
+      direction: "inbound",
+      fromAddr: hiiragiya.contactEmail,
+      toAddr: DESIGNER,
+      body: `Dear Ms. Voss,
+
+Thank you very much. We can offer one Shin room for 5-9 November, 4 nights.
+
+Rate: JPY 242,000 per room per night, including breakfast and kaiseki dinner for two guests.
+Tax and service included. Non-commissionable.
+
+We can prepare shellfish-free kaiseki if advised 7 days prior. Please note dashi may contain fish unless a fully vegetarian broth is requested.
+
+We may hold the room until Monday 10:00 Japan time.
+
+Sincerely,
+Keiko Nishimura`,
+      sentAt: daysAgo(4, 9),
+    },
+  ]);
+
+  const [tokyoDmcThread] = await db
+    .insert(threads)
+    .values({
+      subject: "Draft programme — Ashford Kyoto/Tokyo",
+      counterpartType: "supplier",
+      supplierId: tokyoDmc.id,
+      tripId: ashfordJapan.id,
+      lastMessageAt: daysAgo(2, 18),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: tokyoDmcThread.id,
+      direction: "outbound",
+      fromAddr: DESIGNER,
+      toAddr: tokyoDmc.contactEmail,
+      body: `Dear Sota,
+
+Could you price guiding and ground handling for the Ashfords, 5-16 November? Please keep mornings slow and avoid more than one hotel change.
+
+Many thanks,
+Elena`,
+      sentAt: daysAgo(5, 10),
+    },
+    {
+      threadId: tokyoDmcThread.id,
+      direction: "inbound",
+      fromAddr: tokyoDmc.contactEmail,
+      toAddr: DESIGNER,
+      body: `Dear Elena,
+
+For Victoria and George Ashford we suggest:
+- Kyoto private guiding 3 half-days
+- Anniversary teahouse evening with geiko introduction
+- Shinkansen Kyoto to Tokyo, green car
+- Tokyo craft and gardens programme 2 days
+- All transfers by Alphard
+
+Programme fee: JPY 1,860,000 total for two guests, gross, including guide fees, transfers, teahouse evening, train tickets, and restaurant booking support. Hotels not included.
+
+We are holding Yuki for the Kyoto food/craft days until this Friday. Tea house deposit is non-refundable once confirmed.
+
+Warm regards,
+Sota`,
+      sentAt: daysAgo(2, 18),
+    },
+  ]);
+
+  // 4. Chen supplier threads — short-notice Kenya examples
+  const [angamaThread] = await db
+    .insert(threads)
+    .values({
+      subject: "Urgent availability — Chen solo traveller",
+      counterpartType: "supplier",
+      supplierId: angama.id,
+      tripId: chenKenya.id,
+      lastMessageAt: daysAgo(1, 8),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: angamaThread.id,
+      direction: "outbound",
+      fromAddr: DESIGNER,
+      toAddr: angama.contactEmail,
+      body: `Dear Njeri,
+
+Do you have a tent for one guest for 5 or 6 nights during migration season? He is flexible on exact dates but needs a fast decision and seamless arrival from Lagos.
+
+Warmly,
+Elena`,
+      sentAt: daysAgo(2, 17),
+    },
+    {
+      threadId: angamaThread.id,
+      direction: "inbound",
+      fromAddr: angama.contactEmail,
+      toAddr: DESIGNER,
+      body: `Dear Elena,
+
+We can accommodate Mr Chen in a Tented Suite for 6 nights, 22-28 August 2026.
+
+Single occupancy rate: USD 2,450 per night, gross, full board, laundry, drinks, shared game drives, and Angama airstrip transfers included.
+Park fees are excluded at USD 200 per person per day and may change without notice.
+
+We can hold for 48 hours only. Ballooning has one seat left on 24 August at USD 560.
+
+Warm regards,
+Njeri`,
+      sentAt: daysAgo(1, 8),
+    },
+  ]);
+
+  const [safariThread] = await db
+    .insert(threads)
+    .values({
+      subject: "Chen Kenya logistics",
+      counterpartType: "supplier",
+      supplierId: safariArchitects.id,
+      tripId: chenKenya.id,
+      lastMessageAt: daysAgo(1, 13),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: safariThread.id,
+      direction: "inbound",
+      fromAddr: safariArchitects.contactEmail,
+      toAddr: DESIGNER,
+      body: `Elena,
+
+We can handle JKIA meet & assist, Wilson transfer, return domestic flights, and visa briefing for Mr Chen.
+
+Package total: USD 3,880 for one guest, gross. Includes meet & assist, private transfers in Nairobi, Wilson-Mara-Wilson flights, AMREF cover, and our 24/7 duty officer. Does not include Kenya eTA fees.
+
+Important: Lagos arrival after 20:30 risks missing same-day Wilson connection, so we recommend Nairobi overnight if he lands late.
+
+Tom`,
+      sentAt: daysAgo(1, 13),
+    },
+  ]);
+
+  // 5. Rao client and supplier threads — multi-generation Maldives
+  const [raoThread] = await db
+    .insert(threads)
+    .values({
+      subject: "Maldives — villa layouts and Grandad",
+      counterpartType: "client",
+      clientId: rao.id,
+      tripId: raoMaldives.id,
+      lastMessageAt: daysAgo(1, 21),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: raoThread.id,
+      direction: "outbound",
+      fromAddr: DESIGNER,
+      toAddr: rao.email,
+      body: `Dear Priya,
+
+I am checking the larger two- and three-bedroom villas now, especially layouts where your father can avoid stairs. I will also confirm seaplane timing around the children's school break arrivals.
+
+Warmly,
+Elena`,
+      sentAt: daysAgo(2, 12),
+    },
+    {
+      threadId: raoThread.id,
+      direction: "inbound",
+      fromAddr: rao.email,
+      toAddr: DESIGNER,
+      body: `Dear Elena,
+
+Thank you. A few details before we choose: Appa can manage a few steps but not a long staircase, and he needs shade close to the pool. The twins are very excited about the slide villas but I do not want anything that feels unsafe.
+
+Anil is asking whether we can arrive by direct seaplane after the Singapore flight or whether we need to overnight in Male.
+
+Also please remind me which property can do Jain vegetarian meals properly, not just pasta and salad.
+
+Warmly,
+Priya`,
+      sentAt: daysAgo(1, 21),
+    },
+  ]);
+
+  const [sonevaThread] = await db
+    .insert(threads)
+    .values({
+      subject: "Rao family festive availability",
+      counterpartType: "supplier",
+      supplierId: soneva.id,
+      tripId: raoMaldives.id,
+      lastMessageAt: daysAgo(2, 9),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: sonevaThread.id,
+      direction: "inbound",
+      fromAddr: soneva.contactEmail,
+      toAddr: DESIGNER,
+      body: `Dear Elena,
+
+For the Rao family, 18-27 December 2026:
+
+2 Bedroom Water Reserve with Slide: USD 6,750++ per villa per night, breakfast included.
+3 Bedroom Island Reserve: USD 8,900++ per villa per night, breakfast included, no overwater stairs and easier for grandfather.
+
+++ means 10% service charge and 16% GST. Festive gala dinners are mandatory on 24 and 31 Dec; for their stay only 24 Dec applies at USD 680 per adult / USD 340 per child. Jain vegetarian menus can be arranged with 14 days notice.
+
+Seaplane transfers: USD 1,250 per adult return, USD 625 per child return. Last seaplane departs Male around 16:00, subject to daylight and weather.
+
+We can hold both options for 72 hours.
+
+Warm regards,
+Aisha`,
+      sentAt: daysAgo(2, 9),
+    },
+  ]);
+
+  const [joaliThread] = await db
+    .insert(threads)
+    .values({
+      subject: "JOALI festive — Rao family",
+      counterpartType: "supplier",
+      supplierId: joali.id,
+      tripId: raoMaldives.id,
+      lastMessageAt: daysAgo(3, 16),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: joaliThread.id,
+      direction: "inbound",
+      fromAddr: joali.contactEmail,
+      toAddr: DESIGNER,
+      body: `Dear Elena,
+
+We have one Three Bedroom Ocean Residence available 18-27 December.
+
+Rate is USD 92,500 for the full 9-night stay, gross, including daily breakfast, roundtrip shared seaplane transfers for 5 guests, and festive dinner on 24 Dec.
+
+Please note the residence is overwater with internal stairs. We can add pool shade and a safety gate for children on request, but it may not be ideal for a guest with mobility concerns.
+
+Deposit 50% due within 5 days to confirm. Cancellation becomes non-refundable from 1 October.
+
+Kind regards,
+Mila`,
+      sentAt: daysAgo(3, 16),
+    },
+  ]);
+
+  // 6. Ortega client and supplier threads — Sicily food, craft, and cancellation terms
+  const [ortegaThread] = await db
+    .insert(threads)
+    .values({
+      subject: "Sicily in October",
+      counterpartType: "client",
+      clientId: ortega.id,
+      tripId: ortegaSicily.id,
+      lastMessageAt: daysAgo(2, 8),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: ortegaThread.id,
+      direction: "inbound",
+      fromAddr: ortega.email,
+      toAddr: DESIGNER,
+      body: `Elena,
+
+We are dreaming of Sicily but not the obvious version. Palermo palazzi, ceramics, maybe a private kitchen with a grandmother if that is not too staged. Javier wants one Etna winery but not five tastings in a row.
+
+Two important things: Javier is newly gluten free, not celiac, but he gets very uncomfortable. And we need cancellation terms before we emotionally attach to any villa.
+
+Could we keep this to three bases maximum? I know myself, I will want to add everything.
+
+Lucia`,
+      sentAt: daysAgo(2, 8),
+    },
+  ]);
+
+  const [sicilyDmcThread] = await db
+    .insert(threads)
+    .values({
+      subject: "Ortega Sicily — programme and villa",
+      counterpartType: "supplier",
+      supplierId: sicilianRoads.id,
+      tripId: ortegaSicily.id,
+      lastMessageAt: daysAgo(1, 17),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: sicilyDmcThread.id,
+      direction: "inbound",
+      fromAddr: sicilianRoads.contactEmail,
+      toAddr: DESIGNER,
+      body: `Cara Elena,
+
+For the Ortegas we can arrange Palermo + Noto + Etna with private access:
+
+Programme fee: EUR 18.400 total for two guests, gross. Includes 7 days private driver, 5 specialist guides, Palermo palazzo visit, Monreale after-hours, private ceramics studio in Caltagirone, one Etna winery lunch, and gluten-free restaurant vetting.
+
+Villa near Noto: EUR 2.950 per night, 4 night minimum, net. Deposit 30% due to hold; refundable less EUR 750 admin fee until 60 days prior, then non-refundable.
+
+We can hold the villa until Monday COB Italy. The grandmother cooking experience is possible, but the best host uses wheat flour in the kitchen daily, so not safe for celiac guests.
+
+Un abbraccio,
+Alessandra`,
+      sentAt: daysAgo(1, 17),
+    },
+  ]);
+
+  const [belmondThread] = await db
+    .insert(threads)
+    .values({
+      subject: "Taormina beach finale — Ortega",
+      counterpartType: "supplier",
+      supplierId: villaSantAndrea.id,
+      tripId: ortegaSicily.id,
+      lastMessageAt: daysAgo(1, 10),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: belmondThread.id,
+      direction: "inbound",
+      fromAddr: villaSantAndrea.contactEmail,
+      toAddr: DESIGNER,
+      body: `Dear Elena,
+
+For 8-12 October 2026 we can offer:
+
+Junior Suite Sea View: EUR 1,780 per night, gross, breakfast included.
+Premium Suite Sea View with Terrace: EUR 2,640 per night, gross, breakfast included.
+
+Rates include VAT, exclude city tax. 10% commission to Meridian.
+Cancellation: 14 days prior without penalty; after that one night charged. We can hold both rooms for 4 days.
+
+Warm regards,
+Giulia`,
+      sentAt: daysAgo(1, 10),
+    },
+  ]);
+
   // ---------- Call notes ----------
   await db.insert(callNotes).values([
     {
@@ -398,27 +886,53 @@ Victoria`,
       body: "Robert called 11pm his time. Wants Mara for the migration window, flying in from a Lagos board meeting. 5-6 nights, best camp available, doesn't care which. Will not fill out the form. Needs visa guidance for Kenya on a US passport. Decide-by: this Friday.",
       createdAt: daysAgo(3),
     },
+    {
+      clientId: rao.id,
+      tripId: raoMaldives.id,
+      body: "Priya wants space and calm over a scene. Confirmed Jain vegetarian for Priya's father; no onion/garlic on some days. Grandfather has mild mobility limitations and should avoid steep stairs. Twins are strong swimmers but Priya worries about overwater decks. Anil wants as few transfers as possible after SIN-MLE.",
+      createdAt: daysAgo(10),
+    },
+    {
+      clientId: ortega.id,
+      tripId: ortegaSicily.id,
+      body: "Lucia loves private access but hates anything theatrical or fake. Javier wants cancellation terms and totals before committing. Gluten-free is important but not celiac-level cross-contamination. They prefer 2-3 bases, no one-night stops.",
+      createdAt: daysAgo(7),
+    },
   ]);
 
   // ---------- Intake form ----------
-  await db.insert(intakeForms).values({
-    clientId: ashford.id,
-    tripId: ashfordJapan.id,
-    answers: {
-      occasion: "30th wedding anniversary",
-      travelers: "2 adults (Victoria 58, George 61)",
-      dates: "First two weeks of November 2026, flexible by 3 days",
-      budget: "£40,000–£50,000 excluding flights",
-      pace: "Slow mornings. Maximum two hotels for the whole trip.",
-      interests: "Gardens, craft (ceramics, textiles), food but nothing 'adventurous', one special evening for the anniversary itself",
-      avoid: "Crowds, early starts, more than one internal flight",
-      dietary: "George: no shellfish (medical). Victoria: none.",
+  await db.insert(intakeForms).values([
+    {
+      clientId: ashford.id,
+      tripId: ashfordJapan.id,
+      answers: {
+        occasion: "30th wedding anniversary",
+        travelers: "2 adults (Victoria 58, George 61)",
+        dates: "First two weeks of November 2026, flexible by 3 days",
+        budget: "£40,000–£50,000 excluding flights",
+        pace: "Slow mornings. Maximum two hotels for the whole trip.",
+        interests: "Gardens, craft (ceramics, textiles), food but nothing 'adventurous', one special evening for the anniversary itself",
+        avoid: "Crowds, early starts, more than one internal flight",
+        dietary: "George: no shellfish (medical). Victoria: none.",
+      },
+      submittedAt: daysAgo(45),
     },
-    submittedAt: daysAgo(45),
-  });
+    {
+      clientId: rao.id,
+      tripId: raoMaldives.id,
+      answers: {
+        travelers: "2 adults, twins age 7, grandfather age 74",
+        rooms: "Prefer 3 bedrooms if possible; grandfather should have a quiet room close to living area",
+        priorities: "Privacy, safe swimming, excellent vegetarian food, minimal transfers",
+        avoid: "Party atmosphere, long buggy rides for every meal, unsafe-feeling overwater decks",
+        budget: "Comfortable up to USD 120k if the layout is right",
+      },
+      submittedAt: daysAgo(18),
+    },
+  ]);
 
   // ---------- Preferences (traceable facts) ----------
-  const [meyerCall, chenCall] = [1, 2]; // call note ids in insert order
+  const [meyerCall, chenCall, raoCall, ortegaCall] = [1, 2, 3, 4]; // call note ids in insert order
   await db.insert(clientPreferences).values([
     { clientId: meyer.id, kind: "confirmed", text: "One lodge per trip — no hotel splits", source: `call_note:${meyerCall}`, createdAt: daysAgo(12) },
     { clientId: meyer.id, kind: "confirmed", text: "Daily horseback riding option for the kids", source: `call_note:${meyerCall}`, createdAt: daysAgo(12) },
@@ -427,9 +941,15 @@ Victoria`,
     { clientId: ashford.id, kind: "confirmed", text: "George: no shellfish — medical, not preference", source: "message:5", createdAt: daysAgo(5) },
     { clientId: ashford.id, kind: "confirmed", text: "Max two hotels per trip", source: "form:1", createdAt: daysAgo(45) },
     { clientId: chen.id, kind: "confirmed", text: "Phone over email; never fills out forms", source: `call_note:${chenCall}`, createdAt: daysAgo(3) },
+    { clientId: rao.id, kind: "confirmed", text: "Jain vegetarian meals must be handled properly, including no onion/garlic on some days", source: `call_note:${raoCall}`, createdAt: daysAgo(10) },
+    { clientId: rao.id, kind: "confirmed", text: "Grandfather should avoid steep stairs and long walks between villa and shared spaces", source: `call_note:${raoCall}`, createdAt: daysAgo(10) },
+    { clientId: rao.id, kind: "inferred", text: "Priya prefers safety and layout clarity over the most photogenic villa", source: "message:18", createdAt: daysAgo(1) },
+    { clientId: ortega.id, kind: "confirmed", text: "Javier needs gluten-free dining support, but cross-contamination is not celiac-level critical", source: `call_note:${ortegaCall}`, createdAt: daysAgo(7) },
+    { clientId: ortega.id, kind: "confirmed", text: "Cancellation terms and total costs must be clear before they attach emotionally to a villa", source: `call_note:${ortegaCall}`, createdAt: daysAgo(7) },
+    { clientId: ortega.id, kind: "confirmed", text: "Keep Sicily to two or three bases; no one-night stops", source: "message:23", createdAt: daysAgo(2) },
   ]);
 
-  console.log("Seeded: 3 clients, 3 trips, 5 suppliers, 5 threads, call notes, form, preferences.");
+  console.log("Seeded: 5 clients, 5 trips, 11 suppliers, 15 threads, call notes, forms, preferences.");
 }
 
 seed().then(() => process.exit(0));
