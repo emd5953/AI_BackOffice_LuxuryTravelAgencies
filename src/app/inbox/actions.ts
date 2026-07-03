@@ -5,7 +5,14 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { clients, drafts, messages, threads } from "@/db/schema";
 import { draftReply } from "@/lib/agents/draft-reply";
+import { parseQuotesFromThread } from "@/lib/agents/parse-quote";
 import { DESIGNER_EMAIL } from "@/lib/constants";
+
+export async function parseQuotes(threadId: number) {
+  const inserted = await parseQuotesFromThread(threadId);
+  revalidatePath(`/inbox/${threadId}`);
+  if (inserted[0]) revalidatePath(`/trips/${inserted[0].tripId}/quotes`);
+}
 
 export async function generateDraft(threadId: number) {
   await draftReply(threadId);

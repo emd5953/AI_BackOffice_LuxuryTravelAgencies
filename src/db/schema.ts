@@ -94,6 +94,40 @@ export const callNotes = sqliteTable("call_notes", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
+// Structured rate quotes extracted by the parsing agent from supplier emails.
+// One row per quoted option; messageId is the provenance — every number in the
+// comparison table traces back to the exact email it came from.
+export const quotes = sqliteTable("quotes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  tripId: integer("trip_id")
+    .notNull()
+    .references(() => trips.id),
+  supplierId: integer("supplier_id")
+    .notNull()
+    .references(() => suppliers.id),
+  messageId: integer("message_id")
+    .notNull()
+    .references(() => messages.id),
+  label: text("label").notNull(),
+  currency: text("currency").notNull(),
+  amount: real("amount").notNull(),
+  // The figure exactly as the supplier wrote it (e.g. "USD 1.890") — lets a
+  // designer eyeball whether normalization (European decimals!) went wrong
+  amountAsWritten: text("amount_as_written").notNull(),
+  unit: text("unit", { enum: ["per_night", "per_stay"] }).notNull(),
+  scope: text("scope", {
+    enum: ["per_person", "per_room", "per_unit", "whole_party"],
+  }).notNull(),
+  basis: text("basis", { enum: ["net", "gross", "unstated"] }).notNull(),
+  minNights: integer("min_nights"),
+  childPolicy: text("child_policy"),
+  holdExpiry: text("hold_expiry"),
+  inclusions: text("inclusions", { mode: "json" }).$type<string[]>().notNull(),
+  caveats: text("caveats", { mode: "json" }).$type<string[]>().notNull(),
+  model: text("model").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 // Agent-generated reply drafts. Never sent directly — a designer approves,
 // edits, or dismisses every one (the human-oversight gate).
 export const drafts = sqliteTable("drafts", {

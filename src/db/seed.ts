@@ -8,6 +8,8 @@ import {
   messages,
   callNotes,
   intakeForms,
+  drafts,
+  quotes,
 } from "./schema";
 
 // Deterministic seed for a fictional agency: Meridian Private Travel.
@@ -24,6 +26,8 @@ function daysAgo(n: number, hour = 10): Date {
 
 async function seed() {
   // Idempotent: wipe in FK-safe order
+  await db.delete(quotes);
+  await db.delete(drafts);
   await db.delete(intakeForms);
   await db.delete(callNotes);
   await db.delete(messages);
@@ -241,6 +245,107 @@ Francisca`,
     },
   ]);
 
+  // 2b. Explora rate quote — clean tone but per-PERSON pricing (Phase 2 trap #2)
+  const [exploraThread] = await db
+    .insert(threads)
+    .values({
+      subject: "RE: Availability — Meyer family x4, 14-24 March 2027",
+      counterpartType: "supplier",
+      supplierId: explora.id,
+      tripId: meyerPatagonia.id,
+      lastMessageAt: daysAgo(3, 15),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: exploraThread.id,
+      direction: "outbound",
+      fromAddr: DESIGNER,
+      toAddr: explora.contactEmail,
+      body: `Dear Camila,
+
+Could you check availability and your best rate for a family of four (children 9 and 12), 14–24 March 2027? Connecting rooms preferred. The children are keen riders, so daily horseback options matter.
+
+Many thanks,
+Elena Voss
+Meridian Private Travel`,
+      sentAt: daysAgo(4, 9),
+    },
+    {
+      threadId: exploraThread.id,
+      direction: "inbound",
+      fromAddr: explora.contactEmail,
+      toAddr: DESIGNER,
+      body: `Dear Elena,
+
+Thank you for thinking of Explora for the Meyer family. For 14–24 March 2027 we are pleased to offer:
+
+Two connecting Cordillera rooms
+Rate: USD 1,095 per person per night, double occupancy, all-inclusive programme (full board, open bar, two daily guided explorations, transfers from Puerto Natales airport).
+Children up to 12 years sharing the programme: 50% of the adult rate.
+
+Our rates are commissionable at 10%. Horseback riding is available every day from our own stables at no supplement — the kids will love it.
+
+We can hold the space for 7 days from today.
+
+Warm regards,
+Camila Reyes
+Reservations, Explora Patagonia`,
+      sentAt: daysAgo(3, 15),
+    },
+  ]);
+
+  // 2c. Awasi rate quote — informal, European decimals, NET, relative hold date (trap #3)
+  const [awasiThread] = await db
+    .insert(threads)
+    .values({
+      subject: "Re: Meyer family March 2027??",
+      counterpartType: "supplier",
+      supplierId: awasi.id,
+      tripId: meyerPatagonia.id,
+      lastMessageAt: daysAgo(1, 19),
+    })
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      threadId: awasiThread.id,
+      direction: "outbound",
+      fromAddr: DESIGNER,
+      toAddr: awasi.contactEmail,
+      body: `Dear Martín,
+
+Checking availability and rates for a family of four (children 9 and 12), 14–24 March 2027. A villa would suit them well. Daily riding options are important for the children.
+
+Many thanks,
+Elena Voss
+Meridian Private Travel`,
+      sentAt: daysAgo(4, 9),
+    },
+    {
+      threadId: awasiThread.id,
+      direction: "inbound",
+      fromAddr: awasi.contactEmail,
+      toAddr: DESIGNER,
+      body: `Hola Elena!!
+
+Good news - we have 1 villa left for those dates. Villa sleeps the family of 4 comfortable (master + second bedroom).
+
+Rate for your dates: US$ 3.290 per night for the villa, includes your private guide + 4x4 for every villa (so riding every day no problem, we arrange with the estancia next door), full board and bar. Minimum 3 nights. And for you: stay 10 pay 9 ;)
+
+Please note these rates are NET, non commissionable.
+
+Only 1 villa left so please advise soon, I can hold till Friday only.
+
+PS - for the grandmother we could add extra bed in the master but honestly villa is comfortable for 4, for 5 is tight. Maybe she takes the second villa if something opens up? Will keep you posted.
+
+Saludos!
+Martín`,
+      sentAt: daysAgo(1, 19),
+    },
+  ]);
+
   // 3. Ashford client thread — anniversary trip, dietary detail buried in email
   const [ashfordThread] = await db
     .insert(threads)
@@ -316,7 +421,7 @@ Victoria`,
     { clientId: chen.id, kind: "confirmed", text: "Phone over email; never fills out forms", source: `call_note:${chenCall}`, createdAt: daysAgo(3) },
   ]);
 
-  console.log("Seeded: 3 clients, 3 trips, 5 suppliers, 3 threads, call notes, form, preferences.");
+  console.log("Seeded: 3 clients, 3 trips, 5 suppliers, 5 threads, call notes, form, preferences.");
 }
 
 seed().then(() => process.exit(0));

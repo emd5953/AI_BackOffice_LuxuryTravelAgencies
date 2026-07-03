@@ -64,3 +64,29 @@ Subtle bit: `key={pendingDraft?.id}` on `DraftPanel` — when a new draft arrive
 ### Known gap (own it if asked)
 
 Draft generation is a blocking server action (~15–30s of "Drafting…"). Production-grade would stream the draft in. Deliberate v1 cut; revisit with the latency work in Phase 4.
+
+---
+
+## Phase 2 — Supplier quote parsing & comparison
+
+### 1. The model extracts; the code computes
+
+**Q:** "Why doesn't the agent calculate the stay totals?"
+
+The extraction schema captures *facts* (amount, unit, scope, basis); `estimateStayTotal()` in TypeScript does the arithmetic. LLMs are probabilistic — you never let one do deterministic math a designer will quote to a client. Bonus: the UI prints the formula next to every estimate ("$1,095 × 10 nights × 4 pax") so the designer can audit the arithmetic at a glance. Show your math is a trust pattern too.
+
+### 2. Why store `amountAsWritten` next to the normalized `amount`?
+
+It's the normalization audit trail. "USD 1.890" → 1,890 involved a judgment call (European decimal); putting both in the table lets a designer catch a wrong normalization in one glance. It's also a free eval: any row where written and normalized diverge suspiciously is a test case.
+
+### 3. Why is `holdExpiry` stored verbatim ("till Friday"), not resolved to a date?
+
+The model doesn't know which Friday matters — resolution depends on when the email arrived, and delegating date math to the model invites silent errors. Verbatim + the email timestamp (via `messageId` provenance) means code *could* resolve it deterministically later; meanwhile the ambiguity is surfaced, not hidden. Same philosophy as #1: the model transcribes, code interprets.
+
+### 4. When code can't compute honestly, it refuses
+
+`estimateStayTotal` returns `null` + warning for non-USD, appends "child discounts NOT applied" on flat per-person math, and doesn't apply promos. A wrong number in a comparison table is worse than a dash — the designer trusts the table or the tool is dead. Every shortcut the code takes is a visible ⚠ warning, never silent.
+
+### Observed extraction quality (worth citing in interview)
+
+The model self-flagged a *genuine* ambiguity unprompted: Tierra's "USD 1.890 per night" for a family suite with a child discount could read per-suite or per-person — it chose per-unit and wrote "confirm with supplier" into caveats. That's the flag channel working as designed.

@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { drafts } from "@/db/schema";
+import { quotes } from "@/db/schema";
 import { getClientContext, getSupplier, getThread, getThreadMessages } from "@/lib/context";
 import { DraftPanel } from "@/components/draft-panel";
+import { ParsePanel } from "@/components/parse-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +32,14 @@ export default async function ThreadPage({
     .where(and(eq(drafts.threadId, threadId), eq(drafts.status, "pending")))
     .orderBy(desc(drafts.createdAt))
     .limit(1);
+
+  const threadQuotes =
+    thread.counterpartType === "supplier" && thread.supplierId && thread.tripId
+      ? await db
+          .select()
+          .from(quotes)
+          .where(and(eq(quotes.tripId, thread.tripId), eq(quotes.supplierId, thread.supplierId)))
+      : [];
 
   return (
     <main className="mx-auto max-w-6xl p-6">
@@ -84,11 +94,11 @@ export default async function ThreadPage({
               }
             />
           ) : (
-            <div className="border-t border-zinc-200 dark:border-zinc-800 p-4">
-              <p className="text-xs text-zinc-500">
-                Supplier coordination drafting arrives in Phase 2.
-              </p>
-            </div>
+            <ParsePanel
+              threadId={threadId}
+              tripId={thread.tripId}
+              quoteCount={threadQuotes.length}
+            />
           )}
         </section>
 
