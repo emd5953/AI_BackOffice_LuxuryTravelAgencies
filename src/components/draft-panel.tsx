@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { approveDraft, dismissDraft, generateDraft } from "@/app/inbox/actions";
+import { AgentProgress } from "@/components/agent-progress";
 
 interface PendingDraft {
   id: number;
@@ -9,19 +10,29 @@ interface PendingDraft {
   flags: string[];
 }
 
+const GENERATE_STEPS = [
+  { at: 0, label: "Assembling client context" },
+  { at: 0.15, label: "Claude is drafting in Elena's voice" },
+  { at: 0.85, label: "Checking for unverifiable claims" },
+];
+
 export function DraftPanel({
   threadId,
   draft,
+  etaMs,
 }: {
   threadId: number;
   draft: PendingDraft | null;
+  etaMs: number;
 }) {
   const [body, setBody] = useState(draft?.body ?? "");
   const [isPending, startTransition] = useTransition();
+  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const run = (action: () => Promise<void>) => {
+  const run = (action: () => Promise<void>, generating = false) => {
     setError(null);
+    setIsGenerating(generating);
     startTransition(async () => {
       try {
         await action();
@@ -35,13 +46,16 @@ export function DraftPanel({
     return (
       <div className="border-t border-hairline p-4">
         <button
-          onClick={() => run(() => generateDraft(threadId))}
+          onClick={() => run(() => generateDraft(threadId), true)}
           disabled={isPending}
           className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-white shadow-float transition hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
         >
           {isPending ? "Drafting…" : "Draft reply"}
         </button>
         {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+        {isPending && isGenerating && (
+          <AgentProgress title="Drafting reply" etaMs={etaMs} steps={GENERATE_STEPS} />
+        )}
       </div>
     );
   }

@@ -1,3 +1,4 @@
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { agentRuns } from "@/db/schema";
 
@@ -73,4 +74,32 @@ export async function recordRun<T>(
     });
     throw err;
   }
+}
+
+// Fallback ETAs (ms) for when there's no telemetry history yet.
+const FALLBACK_LATENCY_MS: Record<"draft_reply" | "parse_quote" | "suggest", number> = {
+  draft_reply: 20000,
+  parse_quote: 15000,
+  suggest: 45000,
+};
+
+// Median latency over the most recent 20 successful runs of an agent — the
+// "typical duration" shown to a designer while an action is in flight.
+export async function typicalLatencyMs(
+  agent: "draft_reply" | "parse_quote" | "suggest",
+): Promise<number> {
+  const rows = await db
+    .select({ latencyMs: agentRuns.latencyMs })
+    .from(agentRuns)
+    .where(and(eq(agentRuns.agent, agent), eq(agentRuns.success, true)))
+    .orderBy(desc(agentRuns.createdAt))
+    .limit(20);
+
+  if (rows.length === 0) return FALLBACK_LATENCY_MS[agent];
+
+  const latencies = rows.map((r) => r.latencyMs).sort((a, b) => a - b);
+  const mid = Math.floor(latencies.length / 2);
+  return latencies.length % 2 === 0
+    ? (latencies[mid - 1] + latencies[mid]) / 2
+    : latencies[mid];
 }

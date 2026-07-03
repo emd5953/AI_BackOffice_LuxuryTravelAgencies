@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { drafts } from "@/db/schema";
 import { quotes } from "@/db/schema";
 import { getClientContext, getSupplier, getThread, getThreadMessages } from "@/lib/context";
+import { typicalLatencyMs } from "@/lib/telemetry";
 import { DraftPanel } from "@/components/draft-panel";
 import { ParsePanel } from "@/components/parse-panel";
 
@@ -26,20 +27,25 @@ export default async function ThreadPage({
   const clientCtx = thread.clientId ? await getClientContext(thread.clientId) : null;
   const supplier = thread.supplierId ? await getSupplier(thread.supplierId) : null;
 
-  const [pendingDraft] = await db
-    .select()
-    .from(drafts)
-    .where(and(eq(drafts.threadId, threadId), eq(drafts.status, "pending")))
-    .orderBy(desc(drafts.createdAt))
-    .limit(1);
-
-  const threadQuotes =
+  const [[pendingDraft], threadQuotes, agentEtaMs] = await Promise.all([
+    db
+      .select()
+      .from(drafts)
+      .where(and(eq(drafts.threadId, threadId), eq(drafts.status, "pending")))
+      .orderBy(desc(drafts.createdAt))
+      .limit(1),
     thread.counterpartType === "supplier" && thread.supplierId && thread.tripId
-      ? await db
+      ? db
           .select()
           .from(quotes)
           .where(and(eq(quotes.tripId, thread.tripId), eq(quotes.supplierId, thread.supplierId)))
-      : [];
+      : Promise.resolve([]),
+    thread.counterpartType === "client"
+      ? typicalLatencyMs("draft_reply")
+      : thread.counterpartType === "supplier"
+        ? typicalLatencyMs("parse_quote")
+        : Promise.resolve(0),
+  ]);
 
   return (
     <div>
@@ -88,12 +94,14 @@ export default async function ThreadPage({
                   ? { id: pendingDraft.id, body: pendingDraft.body, flags: pendingDraft.flags }
                   : null
               }
+              etaMs={agentEtaMs}
             />
           ) : (
             <ParsePanel
               threadId={threadId}
               tripId={thread.tripId}
               quoteCount={threadQuotes.length}
+              etaMs={agentEtaMs}
             />
           )}
         </section>

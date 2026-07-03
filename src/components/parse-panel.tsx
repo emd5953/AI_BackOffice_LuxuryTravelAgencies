@@ -3,15 +3,24 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { parseQuotes } from "@/app/inbox/actions";
+import { AgentProgress } from "@/components/agent-progress";
+
+const STEPS = [
+  { at: 0, label: "Reading the supplier email" },
+  { at: 0.15, label: "Extracting rates, holds, and caveats" },
+  { at: 0.85, label: "Normalizing amounts" },
+];
 
 export function ParsePanel({
   threadId,
   tripId,
   quoteCount,
+  etaMs,
 }: {
   threadId: number;
   tripId: number | null;
   quoteCount: number;
+  etaMs: number;
 }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +51,7 @@ export function ParsePanel({
       )}
 
       {error && <p className="text-sm text-danger">{error}</p>}
+      {isPending && <AgentProgress title="Extracting quotes" etaMs={etaMs} steps={STEPS} />}
     </div>
   );
 }

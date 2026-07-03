@@ -3,6 +3,7 @@ import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { clients, drafts, messages, suggestions, threads } from "@/db/schema";
 import { AGENCY_NAME } from "@/lib/constants";
+import { typicalLatencyMs } from "@/lib/telemetry";
 import { SuggestionCard } from "@/components/suggestion-card";
 import { RefreshSuggestionsButton } from "@/components/refresh-suggestions-button";
 
@@ -66,10 +67,11 @@ async function getPendingDraftCount() {
 }
 
 export default async function TodayPage() {
-  const [openSuggestions, awaitingReply, pendingDraftCount] = await Promise.all([
+  const [openSuggestions, awaitingReply, pendingDraftCount, suggestEtaMs] = await Promise.all([
     getOpenSuggestions(),
     getAwaitingReply(),
     getPendingDraftCount(),
+    typicalLatencyMs("suggest"),
   ]);
 
   const today = new Date().toLocaleDateString(undefined, {
@@ -96,7 +98,7 @@ export default async function TodayPage() {
             <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Suggestions
             </h2>
-            <RefreshSuggestionsButton />
+            <RefreshSuggestionsButton etaMs={suggestEtaMs} />
           </div>
 
           {openSuggestions.length === 0 ? (
