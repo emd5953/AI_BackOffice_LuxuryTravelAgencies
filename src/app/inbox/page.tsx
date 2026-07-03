@@ -47,12 +47,20 @@ export default async function InboxPage() {
           <h1 className="text-xl font-semibold">{AGENCY_NAME}</h1>
           <p className="text-sm text-zinc-500">Inbox</p>
         </div>
-        <Link
-          href="/dashboard"
-          className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-        >
-          Dashboard →
-        </Link>
+        <nav className="flex items-center gap-4">
+          <Link
+            href="/today"
+            className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+          >
+            Today →
+          </Link>
+          <Link
+            href="/dashboard"
+            className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+          >
+            Dashboard →
+          </Link>
+        </nav>
       </header>
 
       <ul className="divide-y divide-zinc-200 dark:divide-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-800">

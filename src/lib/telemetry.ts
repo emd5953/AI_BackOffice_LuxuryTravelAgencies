@@ -18,7 +18,7 @@ export function costForUsage(
 }
 
 interface RunMeta {
-  agent: "draft_reply" | "parse_quote" | "eval_grounding";
+  agent: "draft_reply" | "parse_quote" | "eval_grounding" | "suggest";
   model: string;
   threadId?: number;
 }

@@ -3,9 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { clients, drafts, messages, threads } from "@/db/schema";
+import { clients, drafts, messages, suggestions, threads } from "@/db/schema";
 import { draftReply } from "@/lib/agents/draft-reply";
 import { parseQuotesFromThread } from "@/lib/agents/parse-quote";
+import { generateSuggestions } from "@/lib/agents/suggest";
 import { DESIGNER_EMAIL } from "@/lib/constants";
 import { retrieveContext } from "@/lib/retrieval";
 
@@ -70,4 +71,21 @@ export async function dismissDraft(draftId: number) {
   const [draft] = claimed;
   if (!draft) throw new Error("Draft is not pending");
   revalidatePath(`/inbox/${draft.threadId}`);
+}
+
+export async function refreshSuggestions() {
+  await generateSuggestions();
+  revalidatePath("/today");
+}
+
+export async function resolveSuggestion(id: number, outcome: "done" | "dismissed") {
+  // Atomic claim: only one concurrent caller can flip open -> done/dismissed.
+  const claimed = await db
+    .update(suggestions)
+    .set({ status: outcome, resolvedAt: new Date() })
+    .where(and(eq(suggestions.id, id), eq(suggestions.status, "open")))
+    .returning();
+  const [suggestion] = claimed;
+  if (!suggestion) throw new Error("Suggestion is not open");
+  revalidatePath("/today");
 }

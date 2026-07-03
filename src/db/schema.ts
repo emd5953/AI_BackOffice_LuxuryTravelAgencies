@@ -168,7 +168,9 @@ export const intakeForms = sqliteTable("intake_forms", {
 // One row per LLM agent invocation — the observability spine
 export const agentRuns = sqliteTable("agent_runs", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  agent: text("agent", { enum: ["draft_reply", "parse_quote", "eval_grounding"] }).notNull(),
+  agent: text("agent", {
+    enum: ["draft_reply", "parse_quote", "eval_grounding", "suggest"],
+  }).notNull(),
   model: text("model").notNull(),
   threadId: integer("thread_id"),
   inputTokens: integer("input_tokens"),
@@ -190,6 +192,26 @@ export const evalResults = sqliteTable("eval_results", {
   score: real("score"), // 0..1 where applicable
   detail: text("detail"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+// Agent-generated nudges: deadlines about to lapse, follow-ups going stale,
+// opportunities. Every suggestion cites its evidence (sourceRefs) — same
+// provenance rule as everything else.
+export const suggestions = sqliteTable("suggestions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  clientId: integer("client_id").notNull().references(() => clients.id),
+  tripId: integer("trip_id").references(() => trips.id),
+  kind: text("kind", { enum: ["deadline", "follow_up", "opportunity"] }).notNull(),
+  urgency: integer("urgency").notNull(), // 1 = act today, 2 = this week, 3 = keep in mind
+  title: text("title").notNull(),
+  rationale: text("rationale").notNull(),
+  evidence: text("evidence", { mode: "json" }).$type<string[]>().notNull(),
+  sourceRefs: text("source_refs", { mode: "json" }).$type<string[]>().notNull(), // e.g. "quote:3", "call_note:6"
+  contentHash: text("content_hash").notNull(),
+  status: text("status", { enum: ["open", "done", "dismissed"] }).notNull(),
+  model: text("model").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  resolvedAt: integer("resolved_at", { mode: "timestamp" }),
 });
 
 export const contextChunks = sqliteTable("context_chunks", {

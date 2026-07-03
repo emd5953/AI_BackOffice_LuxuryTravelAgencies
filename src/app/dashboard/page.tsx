@@ -105,9 +105,14 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto max-w-5xl p-6">
-      <Link href="/inbox" className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
-        ← Inbox
-      </Link>
+      <nav className="flex items-center gap-4">
+        <Link href="/today" className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
+          ← Today
+        </Link>
+        <Link href="/inbox" className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
+          ← Inbox
+        </Link>
+      </nav>
 
       <header className="mt-4 mb-6">
         <h1 className="text-xl font-semibold">Dashboard</h1>
