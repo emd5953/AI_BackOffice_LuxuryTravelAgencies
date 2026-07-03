@@ -134,9 +134,25 @@ sessions.
   just re-dispatch. Spec lives in this repo's history (see the dispatched
   agent prompt in docs/sessions/ session 4).
 
+### 2026-07-03 (daytime session — UI, rebrand, Postgres, deploy)
+- **UI arc**: quiet-luxury pass (tokens, Fraunces, sidebar) → rebuilt as
+  "sunset atelier" (Analogue-landing palette + riffle floating-canvas layout:
+  dotted grid, pill nav, hover-lift, staggered entrances) → full-viewport
+  CSS-sunset landing page at `/` with the italic-accent serif hero.
+- **Rebrand**: platform is **Analogue**; Meridian Private Travel remains the
+  fictional tenant agency in demo data and agent prompts.
+- **Postgres migration**: full pg-core conversion, postgres.js with
+  prepare:false (pgbouncer), DDL over session pooler; the only code the swap
+  touched beyond mechanics: the two sync transactions. Verified by rerunning
+  every eval gate against live Supabase (21/21, 10/10, retrieval intact).
+  Gotcha log: Supabase direct hostnames are IPv6-only — session pooler is the
+  IPv4 direct-style connection; free Voyage tier is 3 req/min.
+- **Deployed**: https://ai-back-office-analogue.vercel.app (Vercel + Supabase).
+  All routes verified serving production data.
+
 ## Remaining roadmap
 
-- Phase 5: proactive suggestions ("Patagonia availability opened") + Vercel
-  deploy (SQLite → Postgres swap)
-- Streaming draft generation (known UX gap: blocking ~15–30s server action)
-- Gmail API swap-in for the simulated inbox
+- Application track: README polish (screenshots, live URL), the note to
+  Bjarni, mock interview off senior-reviews.md
+- Backlog: grounding-judge calibration; streaming draft generation; Gmail
+  API swap-in for the simulated inbox
