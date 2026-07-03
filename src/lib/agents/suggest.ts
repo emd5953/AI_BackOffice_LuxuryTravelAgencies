@@ -222,17 +222,17 @@ export async function generateSuggestions(): Promise<{
   const validClientIds = new Set(book.map((c) => c.clientId));
   const now = new Date();
 
-  return db.transaction((tx) => {
+  return db.transaction(async (tx) => {
     // Regenerating replaces the open set; dismissals persist across regens.
-    tx.delete(suggestions).where(eq(suggestions.status, "open")).run();
+    await tx.delete(suggestions).where(eq(suggestions.status, "open"));
 
     const dismissedHashes = new Set(
-      tx
-        .select({ contentHash: suggestions.contentHash })
-        .from(suggestions)
-        .where(eq(suggestions.status, "dismissed"))
-        .all()
-        .map((r) => r.contentHash),
+      (
+        await tx
+          .select({ contentHash: suggestions.contentHash })
+          .from(suggestions)
+          .where(eq(suggestions.status, "dismissed"))
+      ).map((r) => r.contentHash),
     );
 
     let inserted = 0;
@@ -249,7 +249,8 @@ export async function generateSuggestions(): Promise<{
         skippedDismissed++;
         continue;
       }
-      tx.insert(suggestions)
+      await tx
+        .insert(suggestions)
         .values({
           clientId: s.clientId,
           tripId: s.tripId,
@@ -264,8 +265,7 @@ export async function generateSuggestions(): Promise<{
           model: MODEL,
           createdAt: now,
           resolvedAt: null,
-        })
-        .run();
+        });
       inserted++;
     }
 

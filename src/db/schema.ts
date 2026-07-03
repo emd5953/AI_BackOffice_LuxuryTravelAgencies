@@ -1,20 +1,20 @@
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import { pgTable, text, integer, doublePrecision, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 
 // ---------- Clients ----------
 
-export const clients = sqliteTable("clients", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const clients = pgTable("clients", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   // Free-form designer notes: who they are, how they like to be handled
   bio: text("bio"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull(),
 });
 
 // A single preference fact about a client, always traceable to where we
 // learned it. `confirmed` = client said it; `inferred` = agent deduced it.
-export const clientPreferences = sqliteTable("client_preferences", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const clientPreferences = pgTable("client_preferences", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   clientId: integer("client_id")
     .notNull()
     .references(() => clients.id),
@@ -22,13 +22,13 @@ export const clientPreferences = sqliteTable("client_preferences", {
   text: text("text").notNull(),
   // e.g. "message:42", "call_note:3", "form:1" — the provenance of the fact
   source: text("source").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull(),
 });
 
 // ---------- Trips ----------
 
-export const trips = sqliteTable("trips", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const trips = pgTable("trips", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   clientId: integer("client_id")
     .notNull()
     .references(() => clients.id),
@@ -41,13 +41,13 @@ export const trips = sqliteTable("trips", {
   endDate: text("end_date"),
   partySize: integer("party_size"),
   budgetUsd: integer("budget_usd"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull(),
 });
 
 // ---------- Suppliers ----------
 
-export const suppliers = sqliteTable("suppliers", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const suppliers = pgTable("suppliers", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: text("name").notNull(),
   type: text("type", {
     enum: ["hotel", "lodge", "dmc", "guide", "transfer", "restaurant"],
@@ -55,25 +55,25 @@ export const suppliers = sqliteTable("suppliers", {
   location: text("location").notNull(),
   contactName: text("contact_name"),
   contactEmail: text("contact_email").notNull(),
-  commissionPct: real("commission_pct"),
+  commissionPct: doublePrecision("commission_pct"),
   // Institutional knowledge: "manager responds within hours", "holds expire fast"
   notes: text("notes"),
 });
 
 // ---------- Communication ----------
 
-export const threads = sqliteTable("threads", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const threads = pgTable("threads", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   subject: text("subject").notNull(),
   counterpartType: text("counterpart_type", { enum: ["client", "supplier"] }).notNull(),
   clientId: integer("client_id").references(() => clients.id),
   supplierId: integer("supplier_id").references(() => suppliers.id),
   tripId: integer("trip_id").references(() => trips.id),
-  lastMessageAt: integer("last_message_at", { mode: "timestamp" }).notNull(),
+  lastMessageAt: timestamp("last_message_at", { withTimezone: true, mode: "date" }).notNull(),
 });
 
-export const messages = sqliteTable("messages", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const messages = pgTable("messages", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   threadId: integer("thread_id")
     .notNull()
     .references(() => threads.id),
@@ -81,24 +81,24 @@ export const messages = sqliteTable("messages", {
   fromAddr: text("from_addr").notNull(),
   toAddr: text("to_addr").notNull(),
   body: text("body").notNull(),
-  sentAt: integer("sent_at", { mode: "timestamp" }).notNull(),
+  sentAt: timestamp("sent_at", { withTimezone: true, mode: "date" }).notNull(),
 });
 
-export const callNotes = sqliteTable("call_notes", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const callNotes = pgTable("call_notes", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   clientId: integer("client_id")
     .notNull()
     .references(() => clients.id),
   tripId: integer("trip_id").references(() => trips.id),
   body: text("body").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull(),
 });
 
 // Structured rate quotes extracted by the parsing agent from supplier emails.
 // One row per quoted option; messageId is the provenance — every number in the
 // comparison table traces back to the exact email it came from.
-export const quotes = sqliteTable("quotes", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const quotes = pgTable("quotes", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   tripId: integer("trip_id")
     .notNull()
     .references(() => trips.id),
@@ -110,7 +110,7 @@ export const quotes = sqliteTable("quotes", {
     .references(() => messages.id),
   label: text("label").notNull(),
   currency: text("currency").notNull(),
-  amount: real("amount").notNull(),
+  amount: doublePrecision("amount").notNull(),
   // The figure exactly as the supplier wrote it (e.g. "USD 1.890") — lets a
   // designer eyeball whether normalization (European decimals!) went wrong
   amountAsWritten: text("amount_as_written").notNull(),
@@ -122,43 +122,43 @@ export const quotes = sqliteTable("quotes", {
   minNights: integer("min_nights"),
   childPolicy: text("child_policy"),
   holdExpiry: text("hold_expiry"),
-  inclusions: text("inclusions", { mode: "json" }).$type<string[]>().notNull(),
-  caveats: text("caveats", { mode: "json" }).$type<string[]>().notNull(),
+  inclusions: jsonb("inclusions").$type<string[]>().notNull(),
+  caveats: jsonb("caveats").$type<string[]>().notNull(),
   model: text("model").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull(),
 });
 
 // Agent-generated reply drafts. Never sent directly — a designer approves,
 // edits, or dismisses every one (the human-oversight gate).
-export const drafts = sqliteTable("drafts", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const drafts = pgTable("drafts", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   threadId: integer("thread_id")
     .notNull()
     .references(() => threads.id),
   body: text("body").notNull(),
   // Open questions the agent couldn't answer from context — designer must resolve
-  flags: text("flags", { mode: "json" }).$type<string[]>().notNull(),
+  flags: jsonb("flags").$type<string[]>().notNull(),
   status: text("status", { enum: ["pending", "approved", "dismissed"] }).notNull(),
   // What the designer actually sent (may differ from body) — the edit distance
   // between body and sentBody is the core draft-quality eval signal
   sentBody: text("sent_body"),
   model: text("model").notNull(),
   // Exact context the agent saw when drafting — audit trail now, eval dataset later
-  promptContext: text("prompt_context", { mode: "json" }).notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  resolvedAt: integer("resolved_at", { mode: "timestamp" }),
+  promptContext: jsonb("prompt_context").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true, mode: "date" }),
 });
 
 // Structured trip questionnaires as submitted by the client
-export const intakeForms = sqliteTable("intake_forms", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const intakeForms = pgTable("intake_forms", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   clientId: integer("client_id")
     .notNull()
     .references(() => clients.id),
   tripId: integer("trip_id").references(() => trips.id),
   // JSON blob of question → answer; schema varies per agency form version
-  answers: text("answers", { mode: "json" }).notNull(),
-  submittedAt: integer("submitted_at", { mode: "timestamp" }).notNull(),
+  answers: jsonb("answers").notNull(),
+  submittedAt: timestamp("submitted_at", { withTimezone: true, mode: "date" }).notNull(),
 });
 
 // One row per retrievable fact about a client. Embedded once, retrieved by
@@ -166,8 +166,8 @@ export const intakeForms = sqliteTable("intake_forms", {
 // ---------- Telemetry & evals (Phase 4) ----------
 
 // One row per LLM agent invocation — the observability spine
-export const agentRuns = sqliteTable("agent_runs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const agentRuns = pgTable("agent_runs", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   agent: text("agent", {
     enum: ["draft_reply", "parse_quote", "eval_grounding", "suggest"],
   }).notNull(),
@@ -175,47 +175,47 @@ export const agentRuns = sqliteTable("agent_runs", {
   threadId: integer("thread_id"),
   inputTokens: integer("input_tokens"),
   outputTokens: integer("output_tokens"),
-  costUsd: real("cost_usd"),
+  costUsd: doublePrecision("cost_usd"),
   latencyMs: integer("latency_ms").notNull(),
-  success: integer("success", { mode: "boolean" }).notNull(),
+  success: boolean("success").notNull(),
   error: text("error"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull(),
 });
 
 // Eval outcomes, one row per case per run — dashboard reads latest per suite
-export const evalResults = sqliteTable("eval_results", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const evalResults = pgTable("eval_results", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   suite: text("suite", { enum: ["parse_golden", "draft_grounding"] }).notNull(),
   runId: text("run_id").notNull(), // one uuid per script invocation
   caseName: text("case_name").notNull(),
-  pass: integer("pass", { mode: "boolean" }).notNull(),
-  score: real("score"), // 0..1 where applicable
+  pass: boolean("pass").notNull(),
+  score: doublePrecision("score"), // 0..1 where applicable
   detail: text("detail"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull(),
 });
 
 // Agent-generated nudges: deadlines about to lapse, follow-ups going stale,
 // opportunities. Every suggestion cites its evidence (sourceRefs) — same
 // provenance rule as everything else.
-export const suggestions = sqliteTable("suggestions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const suggestions = pgTable("suggestions", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   clientId: integer("client_id").notNull().references(() => clients.id),
   tripId: integer("trip_id").references(() => trips.id),
   kind: text("kind", { enum: ["deadline", "follow_up", "opportunity"] }).notNull(),
   urgency: integer("urgency").notNull(), // 1 = act today, 2 = this week, 3 = keep in mind
   title: text("title").notNull(),
   rationale: text("rationale").notNull(),
-  evidence: text("evidence", { mode: "json" }).$type<string[]>().notNull(),
-  sourceRefs: text("source_refs", { mode: "json" }).$type<string[]>().notNull(), // e.g. "quote:3", "call_note:6"
+  evidence: jsonb("evidence").$type<string[]>().notNull(),
+  sourceRefs: jsonb("source_refs").$type<string[]>().notNull(), // e.g. "quote:3", "call_note:6"
   contentHash: text("content_hash").notNull(),
   status: text("status", { enum: ["open", "done", "dismissed"] }).notNull(),
   model: text("model").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  resolvedAt: integer("resolved_at", { mode: "timestamp" }),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true, mode: "date" }),
 });
 
-export const contextChunks = sqliteTable("context_chunks", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const contextChunks = pgTable("context_chunks", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   clientId: integer("client_id").notNull().references(() => clients.id),
   sourceType: text("source_type", {
     enum: ["message", "call_note", "intake_answer", "preference"],
@@ -223,7 +223,7 @@ export const contextChunks = sqliteTable("context_chunks", {
   sourceId: integer("source_id").notNull(),
   text: text("text").notNull(),
   contentHash: text("content_hash").notNull().unique(),
-  embedding: text("embedding", { mode: "json" }).$type<number[]>().notNull(),
+  embedding: jsonb("embedding").$type<number[]>().notNull(),
   model: text("model").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull(),
 });

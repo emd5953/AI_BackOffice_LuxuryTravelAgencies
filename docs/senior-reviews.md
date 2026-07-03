@@ -152,3 +152,13 @@ First grounding run: the Haiku judge scored a good draft 0.50 by flagging genera
 ### Production numbers (first live run)
 
 Draft: ~$0.025 and ~13s. Quote extraction: ~$0.025/email, ~8s. Grounding judge on Haiku: ~$0.003/draft. Per-designer-day at realistic volume (20 drafts + 10 extractions): well under $1 — the economics argument for the whole product in one line.
+
+---
+
+## The Postgres migration — the Phase 0 door swings
+
+Phase 0 claimed SQLite→Postgres was a "cheap to reverse" decision. The bill, measured: one schema-file dialect conversion (mechanical), one driver swap, one config line, and **two functions** — the sync transactions in parse-quote and suggest that leaned on a better-sqlite3 perk. Everything else moved untouched. Verification was the eval suite: 21/21 golden assertions, 10/10 fix regressions (including the concurrency race, now against real Postgres), and retrieval intact — the same gates that protect prompt changes protected the infra change.
+
+Two production details worth naming in an interview: `prepare: false` because Supabase's transaction pooler is pgbouncer (prepared statements don't survive connection multiplexing), and DDL goes over the session pooler (5432), not the transaction pooler (6543). And an environment reality: Supabase's direct hostnames are IPv6-only — IPv4 networks use the session pooler as the direct-style connection.
+
+The lesson that generalizes: **"cheap to reverse" is only true if you can enumerate where you spent the perk.** We knew about the sync transactions because the adversarial review had already put its finger on them.

@@ -117,12 +117,12 @@ export async function parseQuotesFromThread(threadId: number) {
   // Re-parse replaces this message's previous extraction. Delete + insert run
   // in one transaction so concurrent re-extracts can't interleave and leave
   // duplicate rows.
-  return db.transaction((tx) => {
-    tx.delete(quotes).where(eq(quotes.messageId, latestInbound.id)).run();
+  return db.transaction(async (tx) => {
+    await tx.delete(quotes).where(eq(quotes.messageId, latestInbound.id));
 
     if (parsed.options.length === 0) return [];
 
-    return tx
+    return await tx
       .insert(quotes)
       .values(
         parsed.options.map((o) => ({
@@ -145,7 +145,6 @@ export async function parseQuotesFromThread(threadId: number) {
           createdAt: now,
         })),
       )
-      .returning()
-      .all();
+      .returning();
   });
 }
