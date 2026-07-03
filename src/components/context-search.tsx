@@ -45,21 +45,21 @@ export function ContextSearch({ clientId }: { clientId: number }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search this client's history…"
-          className="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400"
+          className="flex-1 rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <button
           type="submit"
           disabled={isPending || !query.trim()}
-          className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 text-sm font-medium hover:opacity-85 disabled:opacity-50"
+          className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-surface-raised hover:opacity-90 disabled:opacity-50"
         >
           {isPending ? "Searching…" : "Search"}
         </button>
       </form>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       {results && results.length === 0 && !error && (
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-ink-muted">
           No results — has this client been indexed? Run npm run index-context.
         </p>
       )}
@@ -67,23 +67,22 @@ export function ContextSearch({ clientId }: { clientId: number }) {
       {results && results.length > 0 && (
         <ul className="space-y-3">
           {results.map((r) => (
-            <li
-              key={r.chunkId}
-              className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-3"
-            >
-              <div className="flex items-center justify-between gap-3 mb-1.5">
-                <span className="inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+            <li key={r.chunkId} className="rounded-xl border border-hairline p-3">
+              <div className="mb-1.5 flex items-center justify-between gap-3">
+                <span className="inline-block rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-muted">
                   {r.sourceType}
                 </span>
-                <span className="text-xs font-mono text-zinc-500">{r.score.toFixed(2)}</span>
+                <span className="font-mono text-xs text-ink-muted tabular-nums">
+                  {r.score.toFixed(2)}
+                </span>
               </div>
-              <div className="h-1 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 mb-2">
+              <div className="mb-2 h-1 w-full rounded-full bg-hairline">
                 <div
-                  className="h-1 rounded-full bg-zinc-500"
+                  className="h-1 rounded-full bg-accent"
                   style={{ width: `${Math.max(0, Math.min(1, r.score)) * 100}%` }}
                 />
               </div>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-4 whitespace-pre-wrap">
+              <p className="line-clamp-4 text-xs leading-relaxed whitespace-pre-wrap text-ink-muted">
                 {r.text}
               </p>
             </li>

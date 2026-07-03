@@ -19,15 +19,15 @@ interface Suggestion {
 const URGENCY_STYLES: Record<number, { label: string; className: string }> = {
   1: {
     label: "act today",
-    className: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
+    className: "bg-danger/15 text-danger",
   },
   2: {
     label: "this week",
-    className: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+    className: "bg-warn-soft text-warn",
   },
   3: {
     label: "keep in mind",
-    className: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+    className: "bg-hairline text-ink-muted",
   },
 };
 
@@ -53,33 +53,36 @@ export function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
   if (resolved) return null;
 
   return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 space-y-2">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${urgency.className}`}>
+    <div className="space-y-2 rounded-2xl border border-hairline bg-surface-raised p-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${urgency.className}`}
+        >
           {urgency.label}
         </span>
-        <span className="text-xs rounded-full border border-zinc-300 dark:border-zinc-700 px-2 py-0.5 text-zinc-500">
+        <span className="rounded-full border border-hairline px-2 py-0.5 text-[10px] uppercase tracking-wide text-ink-muted">
           {suggestion.kind}
         </span>
       </div>
 
-      <p className="text-sm font-medium">{suggestion.title}</p>
+      <p className="text-sm font-medium text-ink">{suggestion.title}</p>
 
       <Link
         href={`/clients/${suggestion.clientId}`}
-        className="text-xs text-blue-700 dark:text-blue-400 hover:underline"
+        className="text-xs text-accent hover:underline"
       >
         {suggestion.clientName}
       </Link>
 
-      <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-        {suggestion.rationale}
-      </p>
+      <p className="text-sm leading-relaxed text-ink-muted">{suggestion.rationale}</p>
 
       {suggestion.evidence.length > 0 && (
         <ul className="space-y-1">
           {suggestion.evidence.map((e, i) => (
-            <li key={i} className="text-xs text-zinc-500 italic">
+            <li
+              key={i}
+              className="border-l-2 border-hairline pl-2 text-xs leading-relaxed text-ink-muted italic"
+            >
               &ldquo;{e}&rdquo;
             </li>
           ))}
@@ -91,7 +94,7 @@ export function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
           {suggestion.sourceRefs.map((ref) => (
             <span
               key={ref}
-              className="text-[10px] font-mono rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-1.5 py-0.5"
+              className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-ink-muted"
             >
               {ref}
             </span>
@@ -103,19 +106,19 @@ export function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
         <button
           onClick={() => resolve("done")}
           disabled={isPending}
-          className="rounded-lg bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium hover:bg-emerald-600 disabled:opacity-50"
+          className="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-surface-raised hover:opacity-90 disabled:opacity-50"
         >
           Done
         </button>
         <button
           onClick={() => resolve("dismissed")}
           disabled={isPending}
-          className="rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50"
+          className="rounded-full border border-hairline px-3 py-1.5 text-xs text-ink-muted hover:text-ink disabled:opacity-50"
         >
           Dismiss
         </button>
       </div>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-danger">{error}</p>}
     </div>
   );
 }

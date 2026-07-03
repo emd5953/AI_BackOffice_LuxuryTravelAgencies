@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { agentRuns, evalResults } from "@/db/schema";
@@ -104,57 +103,50 @@ export default async function DashboardPage() {
   const data = await getDashboardData();
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <nav className="flex items-center gap-4">
-        <Link href="/today" className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
-          ← Today
-        </Link>
-        <Link href="/inbox" className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
-          ← Inbox
-        </Link>
-      </nav>
-
-      <header className="mt-4 mb-6">
-        <h1 className="text-xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-zinc-500 mt-1">Agent telemetry, evals, and draft quality</p>
+    <div>
+      <header className="mb-8">
+        <h1 className="font-display text-3xl tracking-tight text-ink">Dashboard</h1>
+        <p className="mt-1 text-sm text-ink-muted">Agent telemetry, evals, and draft quality</p>
       </header>
 
       <div className="space-y-6">
         {/* Stat cards */}
-        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-            <p className="text-xs text-zinc-500">Total agent runs</p>
-            <p className="text-2xl font-semibold mt-1">{data.totalRuns}</p>
+        <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+            <p className="text-xs text-ink-muted">Total agent runs</p>
+            <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">{data.totalRuns}</p>
           </div>
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-            <p className="text-xs text-zinc-500">Success rate</p>
-            <p className="text-2xl font-semibold mt-1">
+          <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+            <p className="text-xs text-ink-muted">Success rate</p>
+            <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
               {data.successRate != null ? `${(data.successRate * 100).toFixed(0)}%` : "—"}
             </p>
           </div>
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-            <p className="text-xs text-zinc-500">Total cost</p>
-            <p className="text-2xl font-semibold mt-1">${data.totalCost.toFixed(2)}</p>
+          <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+            <p className="text-xs text-ink-muted">Total cost</p>
+            <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
+              ${data.totalCost.toFixed(2)}
+            </p>
           </div>
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-            <p className="text-xs text-zinc-500">Median latency</p>
-            <p className="text-2xl font-semibold mt-1">
+          <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+            <p className="text-xs text-ink-muted">Median latency</p>
+            <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
               {data.medianLatency != null ? `${Math.round(data.medianLatency).toLocaleString()}ms` : "—"}
             </p>
           </div>
         </section>
 
         {/* Per-agent table */}
-        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-          <header className="border-b border-zinc-200 dark:border-zinc-800 p-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        <section className="overflow-hidden rounded-2xl border border-hairline bg-surface-raised">
+          <header className="border-b border-hairline p-4">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Per-agent
             </h2>
           </header>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm tabular-nums">
               <thead>
-                <tr className="text-left text-xs text-zinc-500 border-b border-zinc-200 dark:border-zinc-800">
+                <tr className="border-b border-hairline text-left text-[10px] uppercase tracking-wide text-ink-muted">
                   <th className="p-3 font-medium">Agent</th>
                   <th className="p-3 font-medium">Runs</th>
                   <th className="p-3 font-medium">Success %</th>
@@ -167,24 +159,24 @@ export default async function DashboardPage() {
               <tbody>
                 {data.perAgent.length === 0 && (
                   <tr>
-                    <td className="p-3 text-xs text-zinc-400" colSpan={7}>
+                    <td className="p-3 text-xs text-ink-muted" colSpan={7}>
                       No agent runs yet.
                     </td>
                   </tr>
                 )}
                 {data.perAgent.map((a) => (
-                  <tr key={a.agent} className="border-b border-zinc-100 dark:border-zinc-900">
-                    <td className="p-3 font-medium">{AGENT_LABELS[a.agent] ?? a.agent}</td>
-                    <td className="p-3">{a.runs}</td>
-                    <td className="p-3">{a.successPct.toFixed(0)}%</td>
-                    <td className="p-3">
+                  <tr key={a.agent} className="border-b border-hairline">
+                    <td className="p-3 font-medium text-ink">{AGENT_LABELS[a.agent] ?? a.agent}</td>
+                    <td className="p-3 text-ink">{a.runs}</td>
+                    <td className="p-3 text-ink">{a.successPct.toFixed(0)}%</td>
+                    <td className="p-3 text-ink">
                       {a.avgInputTokens != null ? Math.round(a.avgInputTokens).toLocaleString() : "—"}
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 text-ink">
                       {a.avgOutputTokens != null ? Math.round(a.avgOutputTokens).toLocaleString() : "—"}
                     </td>
-                    <td className="p-3">${a.totalCost.toFixed(2)}</td>
-                    <td className="p-3">
+                    <td className="p-3 text-ink">${a.totalCost.toFixed(2)}</td>
+                    <td className="p-3 text-ink">
                       {a.medianLatency != null ? `${Math.round(a.medianLatency).toLocaleString()}ms` : "—"}
                     </td>
                   </tr>
@@ -195,14 +187,14 @@ export default async function DashboardPage() {
         </section>
 
         {/* Draft lifecycle */}
-        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">
+        <section className="rounded-2xl border border-hairline bg-surface-raised p-5">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Draft lifecycle
           </h2>
           <div className="flex flex-wrap gap-6">
             <div>
-              <p className="text-xs text-zinc-500">By status</p>
-              <p className="text-sm mt-1">
+              <p className="text-xs text-ink-muted">By status</p>
+              <p className="mt-1 text-sm text-ink">
                 {Object.keys(data.lifecycle.counts).length === 0
                   ? "No drafts yet"
                   : Object.entries(data.lifecycle.counts)
@@ -211,16 +203,16 @@ export default async function DashboardPage() {
               </p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Acceptance rate</p>
-              <p className="text-sm mt-1">
+              <p className="text-xs text-ink-muted">Acceptance rate</p>
+              <p className="mt-1 text-sm text-ink">
                 {data.lifecycle.acceptanceRate != null
                   ? `${(data.lifecycle.acceptanceRate * 100).toFixed(0)}%`
                   : "n/a — no approved/dismissed drafts yet"}
               </p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Mean edit distance</p>
-              <p className="text-sm mt-1">
+              <p className="text-xs text-ink-muted">Mean edit distance</p>
+              <p className="mt-1 text-sm text-ink">
                 {data.lifecycle.meanEditDistance != null
                   ? `${data.lifecycle.meanEditDistance.toFixed(3)} (n=${data.lifecycle.editedSampleSize})`
                   : "n/a — no edited approved drafts yet"}
@@ -230,35 +222,37 @@ export default async function DashboardPage() {
         </section>
 
         {/* Latest evals */}
-        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-3">
+        <section className="rounded-2xl border border-hairline bg-surface-raised p-5">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Latest evals
           </h2>
           <div className="space-y-4">
             {data.latestEvals.map(({ suite, runId, cases }) => (
               <div key={suite}>
-                <p className="text-sm font-medium">{suite}</p>
+                <p className="text-sm font-medium text-ink">{suite}</p>
                 {cases.length === 0 ? (
-                  <p className="text-xs text-zinc-400 mt-1">
+                  <p className="mt-1 text-xs text-ink-muted">
                     No eval runs yet — npm run {suite === "parse_golden" ? "eval:parse" : "eval:grounding"}
                   </p>
                 ) : (
                   <>
-                    <p className="text-[10px] text-zinc-400 mt-0.5">run {runId}</p>
+                    <p className="mt-0.5 text-[10px] text-ink-muted">run {runId}</p>
                     <ul className="mt-2 space-y-1">
                       {cases.map((c) => (
-                        <li key={c.id} className="text-xs flex items-start gap-2">
+                        <li key={c.id} className="flex items-start gap-2 text-xs">
                           <span
-                            className={`mt-1 inline-block h-2 w-2 rounded-full shrink-0 ${
-                              c.pass ? "bg-emerald-500" : "bg-red-500"
+                            className={`mt-1 inline-block h-2 w-2 shrink-0 rounded-full ${
+                              c.pass ? "bg-positive" : "bg-danger"
                             }`}
                           />
-                          <span className="font-mono">{c.caseName}</span>
+                          <span className="font-mono text-ink">{c.caseName}</span>
                           {c.score != null && (
-                            <span className="text-zinc-500">score {c.score.toFixed(2)}</span>
+                            <span className="text-ink-muted tabular-nums">
+                              score {c.score.toFixed(2)}
+                            </span>
                           )}
                           {c.detail && (
-                            <span className="text-zinc-500 truncate max-w-md">
+                            <span className="max-w-md truncate text-ink-muted">
                               {c.detail.slice(0, 140)}
                               {c.detail.length > 140 ? "…" : ""}
                             </span>
@@ -274,16 +268,16 @@ export default async function DashboardPage() {
         </section>
 
         {/* Recent runs */}
-        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-          <header className="border-b border-zinc-200 dark:border-zinc-800 p-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        <section className="overflow-hidden rounded-2xl border border-hairline bg-surface-raised">
+          <header className="border-b border-hairline p-4">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Recent runs
             </h2>
           </header>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm tabular-nums">
               <thead>
-                <tr className="text-left text-xs text-zinc-500 border-b border-zinc-200 dark:border-zinc-800">
+                <tr className="border-b border-hairline text-left text-[10px] uppercase tracking-wide text-ink-muted">
                   <th className="p-3 font-medium">Agent</th>
                   <th className="p-3 font-medium">Model</th>
                   <th className="p-3 font-medium">Tokens</th>
@@ -296,31 +290,33 @@ export default async function DashboardPage() {
               <tbody>
                 {data.recentRuns.length === 0 && (
                   <tr>
-                    <td className="p-3 text-xs text-zinc-400" colSpan={7}>
+                    <td className="p-3 text-xs text-ink-muted" colSpan={7}>
                       No runs yet.
                     </td>
                   </tr>
                 )}
                 {data.recentRuns.map((r) => (
-                  <tr key={r.id} className="border-b border-zinc-100 dark:border-zinc-900">
-                    <td className="p-3">{AGENT_LABELS[r.agent] ?? r.agent}</td>
-                    <td className="p-3 font-mono text-xs">{r.model}</td>
-                    <td className="p-3 text-xs">
+                  <tr key={r.id} className="border-b border-hairline">
+                    <td className="p-3 text-ink">{AGENT_LABELS[r.agent] ?? r.agent}</td>
+                    <td className="p-3 font-mono text-xs text-ink">{r.model}</td>
+                    <td className="p-3 text-xs text-ink">
                       {r.inputTokens != null && r.outputTokens != null
                         ? `${r.inputTokens.toLocaleString()} in / ${r.outputTokens.toLocaleString()} out`
                         : "—"}
                     </td>
-                    <td className="p-3 text-xs">{r.costUsd != null ? `$${r.costUsd.toFixed(4)}` : "—"}</td>
-                    <td className="p-3 text-xs">{r.latencyMs.toLocaleString()}ms</td>
+                    <td className="p-3 text-xs text-ink">
+                      {r.costUsd != null ? `$${r.costUsd.toFixed(4)}` : "—"}
+                    </td>
+                    <td className="p-3 text-xs text-ink">{r.latencyMs.toLocaleString()}ms</td>
                     <td className="p-3">
                       <span
                         className={`inline-block h-2 w-2 rounded-full ${
-                          r.success ? "bg-emerald-500" : "bg-red-500"
+                          r.success ? "bg-positive" : "bg-danger"
                         }`}
                         title={r.error ?? undefined}
                       />
                     </td>
-                    <td className="p-3 text-xs text-zinc-400">
+                    <td className="p-3 text-xs text-ink-muted">
                       {r.createdAt.toLocaleTimeString(undefined, {
                         hour: "numeric",
                         minute: "2-digit",
@@ -333,6 +329,6 @@ export default async function DashboardPage() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

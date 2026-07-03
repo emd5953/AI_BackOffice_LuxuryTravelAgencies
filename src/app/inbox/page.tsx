@@ -41,59 +41,41 @@ export default async function InboxPage() {
   const inbox = await getInbox();
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <header className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">{AGENCY_NAME}</h1>
-          <p className="text-sm text-zinc-500">Inbox</p>
-        </div>
-        <nav className="flex items-center gap-4">
-          <Link
-            href="/today"
-            className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-          >
-            Today →
-          </Link>
-          <Link
-            href="/dashboard"
-            className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-          >
-            Dashboard →
-          </Link>
-        </nav>
+    <div>
+      <header className="mb-8">
+        <h1 className="font-display text-3xl tracking-tight text-ink">{AGENCY_NAME}</h1>
+        <p className="mt-1 text-sm text-ink-muted">Inbox</p>
       </header>
 
-      <ul className="divide-y divide-zinc-200 dark:divide-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-800">
+      <ul className="divide-y divide-hairline rounded-2xl border border-hairline bg-surface-raised">
         {inbox.map((thread) => (
           <li key={thread.id}>
             <Link
               href={`/inbox/${thread.id}`}
-              className="flex items-start gap-3 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+              className="flex items-start gap-3 p-4 hover:bg-surface"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">{thread.counterpart}</span>
-                  <span className="text-xs rounded-full border border-zinc-300 dark:border-zinc-700 px-2 py-0.5 text-zinc-500">
+                  <span className="text-sm font-medium text-ink">{thread.counterpart}</span>
+                  <span className="rounded-full border border-hairline px-2 py-0.5 text-[10px] uppercase tracking-wide text-ink-muted">
                     {thread.counterpartType}
                   </span>
                   {thread.awaitingReply && (
-                    <span className="text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 font-medium">
+                    <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent">
                       awaiting reply
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-zinc-700 dark:text-zinc-300 truncate mt-0.5">
-                  {thread.subject}
-                </p>
-                <p className="text-xs text-zinc-500 truncate mt-0.5">{thread.snippet}</p>
+                <p className="mt-0.5 truncate text-sm text-ink">{thread.subject}</p>
+                <p className="mt-0.5 truncate text-xs text-ink-muted">{thread.snippet}</p>
               </div>
-              <time className="text-xs text-zinc-400 shrink-0">
+              <time className="shrink-0 text-xs text-ink-muted">
                 {thread.lastMessageAt.toLocaleDateString()}
               </time>
             </Link>
           </li>
         ))}
       </ul>
-    </main>
+    </div>
   );
 }

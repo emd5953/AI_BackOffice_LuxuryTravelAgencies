@@ -46,14 +46,10 @@ export default async function QuotesPage({
     }));
 
   return (
-    <main className="mx-auto max-w-6xl p-6">
-      <Link href="/inbox" className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
-        ← Inbox
-      </Link>
-
-      <header className="mt-4 mb-6">
-        <h1 className="text-xl font-semibold">{trip.title}</h1>
-        <p className="text-sm text-zinc-500 mt-1">
+    <div>
+      <header className="mb-8">
+        <h1 className="font-display text-3xl tracking-tight text-ink">{trip.title}</h1>
+        <p className="mt-1 text-sm text-ink-muted">
           {client?.name} · {trip.destination} · {trip.startDate} → {trip.endDate}
           {nights ? ` (${nights} nights)` : ""} · {trip.partySize} pax
           {trip.budgetUsd ? ` · budget $${trip.budgetUsd.toLocaleString()}` : ""}
@@ -67,12 +63,12 @@ export default async function QuotesPage({
           return (
             <section
               key={supplierId}
-              className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden"
+              className="overflow-hidden rounded-2xl border border-hairline bg-surface-raised"
             >
-              <header className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 p-4">
+              <header className="flex items-center justify-between border-b border-hairline p-4">
                 <div>
-                  <h2 className="font-semibold text-sm">{supplier?.name}</h2>
-                  <p className="text-xs text-zinc-500">
+                  <h2 className="text-sm font-semibold text-ink">{supplier?.name}</h2>
+                  <p className="text-xs text-ink-muted">
                     {supplier?.location}
                     {supplier?.commissionPct
                       ? ` · standard commission ${supplier.commissionPct}%`
@@ -82,7 +78,7 @@ export default async function QuotesPage({
                 {thread && (
                   <Link
                     href={`/inbox/${thread.id}`}
-                    className="text-xs text-blue-700 dark:text-blue-400 hover:underline"
+                    className="text-xs text-accent hover:underline"
                   >
                     source email →
                   </Link>
@@ -90,9 +86,9 @@ export default async function QuotesPage({
               </header>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm tabular-nums">
                   <thead>
-                    <tr className="text-left text-xs text-zinc-500 border-b border-zinc-200 dark:border-zinc-800">
+                    <tr className="border-b border-hairline text-left text-[10px] uppercase tracking-wide text-ink-muted">
                       <th className="p-3 font-medium">Option</th>
                       <th className="p-3 font-medium">As written</th>
                       <th className="p-3 font-medium">Normalized</th>
@@ -106,29 +102,26 @@ export default async function QuotesPage({
                     {supplierQuotes.map((q) => {
                       const est = estimateStayTotal(q, trip);
                       return (
-                        <tr
-                          key={q.id}
-                          className="border-b border-zinc-100 dark:border-zinc-900 align-top"
-                        >
-                          <td className="p-3 font-medium">{q.label}</td>
-                          <td className="p-3 font-mono text-xs text-zinc-500">
+                        <tr key={q.id} className="border-b border-hairline align-top">
+                          <td className="p-3 font-medium text-ink">{q.label}</td>
+                          <td className="p-3 font-mono text-xs text-ink-muted">
                             {q.amountAsWritten}
                           </td>
-                          <td className="p-3 whitespace-nowrap">
+                          <td className="p-3 whitespace-nowrap text-ink">
                             ${q.amount.toLocaleString()}{" "}
-                            <span className="text-xs text-zinc-500">
+                            <span className="text-xs text-ink-muted">
                               {q.unit === "per_night" ? "/night" : "/stay"} ·{" "}
                               {q.scope.replace("_", " ")}
                             </span>
                           </td>
                           <td className="p-3">
                             <span
-                              className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium uppercase ${
+                              className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
                                 q.basis === "net"
-                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                                  ? "bg-warn-soft text-warn"
                                   : q.basis === "gross"
-                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                                    : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                                    ? "bg-positive/15 text-positive"
+                                    : "bg-hairline text-ink-muted"
                               }`}
                             >
                               {q.basis}
@@ -137,25 +130,25 @@ export default async function QuotesPage({
                           <td className="p-3">
                             {est.totalUsd ? (
                               <>
-                                <span className="font-semibold">
+                                <span className="font-semibold text-ink">
                                   ${est.totalUsd.toLocaleString()}
                                 </span>
-                                <p className="text-[10px] text-zinc-400 mt-0.5">{est.formula}</p>
+                                <p className="mt-0.5 text-[10px] text-ink-muted">{est.formula}</p>
                               </>
                             ) : (
                               "—"
                             )}
                             {est.warnings.map((w, i) => (
-                              <p key={i} className="text-[10px] text-amber-700 dark:text-amber-400 mt-0.5">
+                              <p key={i} className="mt-0.5 text-[10px] text-warn">
                                 ⚠ {w}
                               </p>
                             ))}
                           </td>
-                          <td className="p-3 text-xs">{q.holdExpiry ?? "—"}</td>
-                          <td className="p-3 text-xs text-zinc-600 dark:text-zinc-400 max-w-56">
+                          <td className="p-3 text-xs text-ink">{q.holdExpiry ?? "—"}</td>
+                          <td className="max-w-56 p-3 text-xs text-ink-muted">
                             {q.childPolicy && <p className="mb-1">Children: {q.childPolicy}</p>}
                             {q.caveats.length > 0 && (
-                              <ul className="list-disc pl-4 space-y-0.5">
+                              <ul className="list-disc space-y-0.5 pl-4">
                                 {q.caveats.map((c, i) => (
                                   <li key={i}>{c}</li>
                                 ))}
@@ -173,17 +166,14 @@ export default async function QuotesPage({
         })}
 
         {pendingSuppliers.length > 0 && (
-          <section className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
+          <section className="rounded-2xl border border-dashed border-hairline p-4">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Awaiting extraction
             </h2>
             <ul className="space-y-1">
               {pendingSuppliers.map(({ thread, supplier }) => (
                 <li key={thread.id} className="text-sm">
-                  <Link
-                    href={`/inbox/${thread.id}`}
-                    className="text-blue-700 dark:text-blue-400 hover:underline"
-                  >
+                  <Link href={`/inbox/${thread.id}`} className="text-accent hover:underline">
                     {supplier?.name ?? "Unknown"} — open thread to extract →
                   </Link>
                 </li>
@@ -193,9 +183,9 @@ export default async function QuotesPage({
         )}
 
         {bySupplier.size === 0 && pendingSuppliers.length === 0 && (
-          <p className="text-sm text-zinc-500">No supplier threads on this trip yet.</p>
+          <p className="text-sm text-ink-muted">No supplier threads on this trip yet.</p>
         )}
       </div>
-    </main>
+    </div>
   );
 }

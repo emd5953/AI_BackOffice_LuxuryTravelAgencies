@@ -80,41 +80,25 @@ export default async function TodayPage() {
   });
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <header className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Today</h1>
-          <p className="text-sm text-zinc-500">
-            {AGENCY_NAME} · {today}
-          </p>
-        </div>
-        <nav className="flex items-center gap-4">
-          <Link
-            href="/inbox"
-            className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-          >
-            Inbox →
-          </Link>
-          <Link
-            href="/dashboard"
-            className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-          >
-            Dashboard →
-          </Link>
-        </nav>
+    <div>
+      <header className="mb-8">
+        <h1 className="font-display text-3xl tracking-tight text-ink">Today</h1>
+        <p className="mt-1 text-sm text-ink-muted">
+          {AGENCY_NAME} · {today}
+        </p>
       </header>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Suggestions
             </h2>
             <RefreshSuggestionsButton />
           </div>
 
           {openSuggestions.length === 0 ? (
-            <p className="text-sm text-zinc-500 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
+            <p className="rounded-2xl border border-hairline p-4 text-sm text-ink-muted">
               No open suggestions — refresh to scan the book of business.
             </p>
           ) : (
@@ -126,27 +110,27 @@ export default async function TodayPage() {
           )}
         </section>
 
-        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-          <header className="border-b border-zinc-200 dark:border-zinc-800 p-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        <section className="overflow-hidden rounded-2xl border border-hairline bg-surface-raised">
+          <header className="border-b border-hairline p-4">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Awaiting your reply
             </h2>
           </header>
           {awaitingReply.length === 0 ? (
-            <p className="p-4 text-sm text-zinc-500">Nothing waiting on you.</p>
+            <p className="p-4 text-sm text-ink-muted">Nothing waiting on you.</p>
           ) : (
-            <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+            <ul className="divide-y divide-hairline">
               {awaitingReply.map((thread) => (
                 <li key={thread.id}>
                   <Link
                     href={`/inbox/${thread.id}`}
-                    className="flex items-center justify-between gap-3 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                    className="flex items-center justify-between gap-3 p-4 hover:bg-surface"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-medium">{thread.clientName}</p>
-                      <p className="text-xs text-zinc-500 truncate">{thread.subject}</p>
+                      <p className="text-sm font-medium text-ink">{thread.clientName}</p>
+                      <p className="truncate text-xs text-ink-muted">{thread.subject}</p>
                     </div>
-                    <time className="text-xs text-zinc-400 shrink-0">
+                    <time className="shrink-0 text-xs text-ink-muted">
                       {thread.lastMessageAt.toLocaleDateString()}
                     </time>
                   </Link>
@@ -156,12 +140,12 @@ export default async function TodayPage() {
           )}
         </section>
 
-        <p className="text-sm text-zinc-500">
-          <Link href="/inbox" className="text-blue-700 dark:text-blue-400 hover:underline">
+        <p className="text-sm text-ink-muted">
+          <Link href="/inbox" className="text-accent hover:underline">
             {pendingDraftCount} pending draft{pendingDraftCount === 1 ? "" : "s"} in the inbox
           </Link>
         </p>
       </div>
-    </main>
+    </div>
   );
 }

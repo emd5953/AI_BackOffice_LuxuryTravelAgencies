@@ -17,7 +17,7 @@ export function ParsePanel({
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <div className="border-t border-zinc-200 dark:border-zinc-800 p-4 flex items-center gap-3">
+    <div className="flex items-center gap-3 border-t border-hairline p-4">
       <button
         onClick={() => {
           setError(null);
@@ -30,21 +30,18 @@ export function ParsePanel({
           });
         }}
         disabled={isPending || !tripId}
-        className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 text-sm font-medium hover:opacity-85 disabled:opacity-50"
+        className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-surface-raised hover:opacity-90 disabled:opacity-50"
       >
         {isPending ? "Extracting…" : quoteCount > 0 ? "Re-extract quotes" : "Extract quotes"}
       </button>
 
       {quoteCount > 0 && tripId && (
-        <Link
-          href={`/trips/${tripId}/quotes`}
-          className="text-sm text-blue-700 dark:text-blue-400 hover:underline"
-        >
+        <Link href={`/trips/${tripId}/quotes`} className="text-sm text-accent hover:underline">
           {quoteCount} option{quoteCount === 1 ? "" : "s"} extracted → view comparison
         </Link>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }
