@@ -37,7 +37,7 @@ Everything the system reasons over already exists in an agency today — it's ju
 
 ## How the agent layer works
 
-![Architecture diagram](docs/architecture-diagram.png)
+![Architecture diagram](docs/agent_architecture.png)
 
 Agents connect the context layer to the inventory layer and do real work on the designer's behalf:
 
