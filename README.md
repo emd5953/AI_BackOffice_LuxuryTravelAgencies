@@ -37,6 +37,8 @@ Everything the system reasons over already exists in an agency today — it's ju
 
 ## How the agent layer works
 
+![Architecture diagram](docs/architecture-diagram.png)
+
 Agents connect the context layer to the inventory layer and do real work on the designer's behalf:
 
 1. **Ingest & structure** — every form, email, and call note is parsed into a per-client context graph (preferences, constraints, history, open threads). Retrieval + embeddings make it queryable.
