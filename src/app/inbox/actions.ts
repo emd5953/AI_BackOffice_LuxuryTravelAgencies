@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { clients, drafts, messages, threads } from "@/db/schema";
 import { draftReply } from "@/lib/agents/draft-reply";
@@ -10,9 +10,13 @@ import { DESIGNER_EMAIL } from "@/lib/constants";
 import { retrieveContext } from "@/lib/retrieval";
 
 export async function parseQuotes(threadId: number) {
-  const inserted = await parseQuotesFromThread(threadId);
+  const [thread] = await db
+    .select({ tripId: threads.tripId })
+    .from(threads)
+    .where(eq(threads.id, threadId));
+  await parseQuotesFromThread(threadId);
   revalidatePath(`/inbox/${threadId}`);
-  if (inserted[0]) revalidatePath(`/trips/${inserted[0].tripId}/quotes`);
+  if (thread?.tripId) revalidatePath(`/trips/${thread.tripId}/quotes`);
 }
 
 export async function generateDraft(threadId: number) {
@@ -21,14 +25,21 @@ export async function generateDraft(threadId: number) {
 }
 
 export async function approveDraft(draftId: number, sentBody: string) {
-  const [draft] = await db.select().from(drafts).where(eq(drafts.id, draftId));
-  if (!draft || draft.status !== "pending") throw new Error("Draft is not pending");
+  const now = new Date();
+
+  // Atomic claim: only one concurrent caller can flip pending -> approved.
+  const claimed = await db
+    .update(drafts)
+    .set({ status: "approved", sentBody, resolvedAt: now })
+    .where(and(eq(drafts.id, draftId), eq(drafts.status, "pending")))
+    .returning();
+  const [draft] = claimed;
+  if (!draft) throw new Error("Draft is not pending");
 
   const [thread] = await db.select().from(threads).where(eq(threads.id, draft.threadId));
   if (!thread?.clientId) throw new Error("Thread has no client");
   const [client] = await db.select().from(clients).where(eq(clients.id, thread.clientId));
 
-  const now = new Date();
   // "Send" = write the outbound message (simulated inbox; Gmail API slots in here later)
   await db.insert(messages).values({
     threadId: draft.threadId,
@@ -38,10 +49,6 @@ export async function approveDraft(draftId: number, sentBody: string) {
     body: sentBody,
     sentAt: now,
   });
-  await db
-    .update(drafts)
-    .set({ status: "approved", sentBody, resolvedAt: now })
-    .where(eq(drafts.id, draftId));
   await db.update(threads).set({ lastMessageAt: now }).where(eq(threads.id, draft.threadId));
 
   revalidatePath(`/inbox/${draft.threadId}`);
@@ -55,11 +62,12 @@ export async function searchClientContext(clientId: number, query: string) {
 }
 
 export async function dismissDraft(draftId: number) {
-  const [draft] = await db.select().from(drafts).where(eq(drafts.id, draftId));
-  if (!draft || draft.status !== "pending") throw new Error("Draft is not pending");
-  await db
+  const claimed = await db
     .update(drafts)
     .set({ status: "dismissed", resolvedAt: new Date() })
-    .where(eq(drafts.id, draftId));
+    .where(and(eq(drafts.id, draftId), eq(drafts.status, "pending")))
+    .returning();
+  const [draft] = claimed;
+  if (!draft) throw new Error("Draft is not pending");
   revalidatePath(`/inbox/${draft.threadId}`);
 }

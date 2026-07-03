@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { contextChunks, drafts } from "@/db/schema";
 import { getClientContext, getThread, getThreadMessages } from "@/lib/context";
@@ -193,6 +193,13 @@ export async function draftReply(threadId: number) {
   if (!parsed) {
     throw new Error("Model output did not match the draft schema");
   }
+
+  // Superseding a stale draft: don't leave orphaned pending drafts behind
+  // when a new one is generated for the same thread.
+  await db
+    .update(drafts)
+    .set({ status: "dismissed", resolvedAt: new Date() })
+    .where(and(eq(drafts.threadId, threadId), eq(drafts.status, "pending")));
 
   const [draft] = await db
     .insert(drafts)

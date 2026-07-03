@@ -76,7 +76,7 @@ export async function parseQuotesFromThread(threadId: number) {
     .select()
     .from(messages)
     .where(eq(messages.threadId, threadId))
-    .orderBy(desc(messages.sentAt));
+    .orderBy(desc(messages.sentAt), desc(messages.id));
   if (!latestInbound || latestInbound.direction !== "inbound") {
     throw new Error("No inbound supplier message to parse");
   }
@@ -108,34 +108,40 @@ export async function parseQuotesFromThread(threadId: number) {
   const parsed = response.parsed_output;
   if (!parsed) throw new Error("Model output did not match the quote schema");
 
-  // Re-parse replaces this message's previous extraction
-  await db.delete(quotes).where(eq(quotes.messageId, latestInbound.id));
-
-  if (parsed.options.length === 0) return [];
-
   const now = new Date();
-  return db
-    .insert(quotes)
-    .values(
-      parsed.options.map((o) => ({
-        tripId: thread.tripId!,
-        supplierId: thread.supplierId!,
-        messageId: latestInbound.id,
-        label: o.label,
-        currency: o.currency,
-        amount: o.amount,
-        amountAsWritten: o.amountAsWritten,
-        unit: o.unit,
-        scope: o.scope,
-        basis: o.basis,
-        minNights: o.minNights,
-        childPolicy: o.childPolicy,
-        holdExpiry: o.holdExpiry,
-        inclusions: o.inclusions,
-        caveats: [...o.caveats, ...parsed.flags],
-        model: MODEL,
-        createdAt: now,
-      })),
-    )
-    .returning();
+
+  // Re-parse replaces this message's previous extraction. Delete + insert run
+  // in one transaction so concurrent re-extracts can't interleave and leave
+  // duplicate rows.
+  return db.transaction((tx) => {
+    tx.delete(quotes).where(eq(quotes.messageId, latestInbound.id)).run();
+
+    if (parsed.options.length === 0) return [];
+
+    return tx
+      .insert(quotes)
+      .values(
+        parsed.options.map((o) => ({
+          tripId: thread.tripId!,
+          supplierId: thread.supplierId!,
+          messageId: latestInbound.id,
+          label: o.label,
+          currency: o.currency,
+          amount: o.amount,
+          amountAsWritten: o.amountAsWritten,
+          unit: o.unit,
+          scope: o.scope,
+          basis: o.basis,
+          minNights: o.minNights,
+          childPolicy: o.childPolicy,
+          holdExpiry: o.holdExpiry,
+          inclusions: o.inclusions,
+          caveats: [...o.caveats, ...parsed.flags.map((f) => `Email-level note: ${f}`)],
+          model: MODEL,
+          createdAt: now,
+        })),
+      )
+      .returning()
+      .all();
+  });
 }

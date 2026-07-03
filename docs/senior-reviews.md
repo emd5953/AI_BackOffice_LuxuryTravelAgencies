@@ -90,3 +90,41 @@ The model doesn't know which Friday matters — resolution depends on when the e
 ### Observed extraction quality (worth citing in interview)
 
 The model self-flagged a *genuine* ambiguity unprompted: Tierra's "USD 1.890 per night" for a family suite with a child discount could read per-suite or per-person — it chose per-unit and wrote "confirm with supplier" into caveats. That's the flag channel working as designed.
+
+---
+
+## Phase 3 — Embeddings + retrieval (Voyage AI)
+
+### 1. Why no vector database?
+
+**Q:** "You built RAG without pgvector/Pinecone — why?"
+
+Do the math: a few hundred chunks × 1024-dim floats, brute-force cosine in TypeScript, is microseconds per query. A vector DB buys approximate-nearest-neighbor speed you need at ~100K+ vectors, at the cost of infra, an index to keep consistent, and recall trade-offs. "I measured, linear scan wins at this scale, and the swap is isolated to one function in retrieval.ts" is the senior answer. Same cheap-to-reverse logic as SQLite-vs-Postgres.
+
+### 2. Why `input_type: "document"` at index time and `"query"` at search time?
+
+Asymmetric retrieval: a query ("boats") and a document ("Call note: Sarah hates boats…") are different kinds of text. Voyage prepends different internal instruction prefixes to each so they land closer in embedding space. Omitting it silently degrades retrieval quality — a classic invisible-quality bug, since everything still *runs*.
+
+### 3. Why `contentHash` on every chunk?
+
+Idempotent indexing. Re-running the indexer embeds only new/changed facts (hash miss), deletes stale ones, skips the rest — so indexing can run on every data change without burning embedding quota or duplicating rows. Embeddings are cache-shaped: content-addressed, invalidated by content change.
+
+### 4. Why does `draftReply` only use retrieval above a chunk threshold?
+
+Retrieval adds a failure mode — the right fact might not make top-k. Below ~30 chunks the full record fits comfortably in context, so retrieval is pure risk with zero benefit. Above it, `promptContext.mode` + retrieved chunk ids/scores are persisted, so a bad draft decomposes into "retrieval missed the fact" (fix indexing/k) vs "model ignored it" (fix prompt). Distinguishing those two failures is the core skill of debugging RAG in production.
+
+### Research note
+
+Training-data recall said `voyage-3.5`; live docs said the current generation is `voyage-4`. Model names drift faster than model knowledge — verify provider APIs against live docs before speccing, every time.
+
+---
+
+## Adversarial review findings (Phases 1–2) — lessons
+
+A cold-context Opus reviewer audited the agent layer. Ten findings accepted, all fixed. The two with interview-grade lessons:
+
+**Check-then-act races in server actions.** `approveDraft` read the draft, checked `status === "pending"`, then wrote — as separate awaited statements. Two concurrent submissions both pass the check → the same draft sends twice, breaking the "exactly once" invariant. The client-side `disabled` button only protects one tab. Fix: atomic claim — `UPDATE … WHERE id = ? AND status = 'pending'` and proceed only if a row was actually claimed. Lesson: **enforce invariants in the database write, not in a read that precedes it.**
+
+**`?? fallback` can hide a violated invariant.** `trip.partySize ?? 1` turned "party size unknown" into a confident single-person total — a 4× undercount rendered as fact, in the exact function whose contract was "never show a wrong number silently". Every `??` on data that feeds a displayed number deserves the question: *is this a safe default, or an assumption that must surface as a warning?*
+
+**Prompt-injection posture (design note, not a bug).** Injection via email bodies is contained by the human gate: no tools, no auto-send, structured outputs, one send path. But an injected email can instruct the model to return empty `flags`/`caveats` — suppressing the "needs your judgment" panel while producing a confident wrong draft. The gate holds; the lesson is that **model-generated warnings are a UX aid, not a security boundary** — never build a trust decision on a channel the input can influence.

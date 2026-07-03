@@ -32,6 +32,19 @@ export function estimateStayTotal(quote: Quote, trip: Trip): StayEstimate {
   }
 
   const nights = nightsBetween(trip.startDate, trip.endDate);
+  if (!Number.isFinite(nights) || nights <= 0) {
+    return {
+      totalUsd: null,
+      formula: "—",
+      warnings: ["Trip dates are invalid or zero nights — cannot estimate"],
+    };
+  }
+  if (quote.minNights != null && nights < quote.minNights) {
+    warnings.push(
+      `Trip is ${nights} nights but supplier minimum is ${quote.minNights} — quote may not apply as-is`,
+    );
+  }
+
   const parts: string[] = [`$${quote.amount.toLocaleString()}`];
   let total = quote.amount;
 
@@ -42,17 +55,34 @@ export function estimateStayTotal(quote: Quote, trip: Trip): StayEstimate {
 
   switch (quote.scope) {
     case "per_person": {
-      const party = trip.partySize ?? 1;
-      total *= party;
-      parts.push(`× ${party} pax`);
+      if (trip.partySize == null) {
+        return {
+          totalUsd: null,
+          formula: "—",
+          warnings: ["Party size unknown — cannot compute a per-person total"],
+        };
+      }
+      total *= trip.partySize;
+      parts.push(`× ${trip.partySize} pax`);
       warnings.push("Flat per-person math — child discounts NOT applied");
       break;
     }
-    case "per_room":
-      total *= 2;
-      parts.push("× 2 rooms (assumed for party of 4)");
-      warnings.push("Room count assumed, not stated per-party");
+    case "per_room": {
+      if (trip.partySize == null) {
+        return {
+          totalUsd: null,
+          formula: "—",
+          warnings: ["Party size unknown — cannot estimate room count"],
+        };
+      }
+      const rooms = Math.ceil(trip.partySize / 2);
+      total *= rooms;
+      parts.push(`× ${rooms} rooms`);
+      warnings.push(
+        `Room count estimated from party of ${trip.partySize} (2 per room) — not stated by supplier`,
+      );
       break;
+    }
     case "per_unit":
     case "whole_party":
       break;
@@ -61,8 +91,12 @@ export function estimateStayTotal(quote: Quote, trip: Trip): StayEstimate {
   if (quote.basis === "net") {
     warnings.push("NET rate — agency markup not included; not comparable to gross as-is");
   }
-  if (quote.caveats.some((c) => /stay\s*10\s*pay\s*9|promo/i.test(c))) {
-    warnings.push("Promo mentioned in caveats not applied to this estimate");
+  if (
+    quote.caveats.some((c) =>
+      /promo|stay\s*\d+\s*pay\s*\d+|\bfree\b|complimentary|discount|% ?off/i.test(c),
+    )
+  ) {
+    warnings.push("Possible discount/promo in caveats not applied to this estimate");
   }
 
   return { totalUsd: Math.round(total), formula: parts.join(" "), warnings };
