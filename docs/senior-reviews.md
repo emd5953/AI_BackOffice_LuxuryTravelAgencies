@@ -128,3 +128,27 @@ A cold-context Opus reviewer audited the agent layer. Ten findings accepted, all
 **`?? fallback` can hide a violated invariant.** `trip.partySize ?? 1` turned "party size unknown" into a confident single-person total — a 4× undercount rendered as fact, in the exact function whose contract was "never show a wrong number silently". Every `??` on data that feeds a displayed number deserves the question: *is this a safe default, or an assumption that must surface as a warning?*
 
 **Prompt-injection posture (design note, not a bug).** Injection via email bodies is contained by the human gate: no tools, no auto-send, structured outputs, one send path. But an injected email can instruct the model to return empty `flags`/`caveats` — suppressing the "needs your judgment" panel while producing a confident wrong draft. The gate holds; the lesson is that **model-generated warnings are a UX aid, not a security boundary** — never build a trust decision on a channel the input can influence.
+
+---
+
+## Phase 4 — Evals + observability
+
+### 1. Why is telemetry a wrapper around the API call, not logging sprinkled in each agent?
+
+`recordRun()` is the single funnel: every LLM invocation gets tokens, cost, latency, and success recorded identically, and a new agent gets observability by construction — you can't forget to instrument it. Failures are recorded *then rethrown*, so the error path is visible in the dashboard, not just in a stack trace someone lost.
+
+### 2. Why do the golden evals re-run the live model instead of asserting on stored rows?
+
+A golden suite asserting on the DB tests the *database*. Re-running extraction on the three trap emails tests the *system* — prompt, schema, model version — and catches regressions when any of them change. The traps are the assertions: 1890-not-1.89, per-person scope, NET basis, verbatim "till Friday". This is the answer to the interview question "how do you know a prompt change didn't break extraction?" — you run the goldens before you merge it.
+
+### 3. Acceptance rate and edit distance were designed in, not bolted on
+
+Phase 1 kept `sentBody` separate from `body` precisely so approve/dismiss and edit-distance metrics fall out of production usage for free. The dashboard's draft-lifecycle card is just a query. Lesson: eval datasets are a schema decision made months before you build the eval.
+
+### 4. The judge finding: evals need calibration too
+
+First grounding run: the Haiku judge scored a good draft 0.50 by flagging general Patagonia-weather statements as ungrounded — despite the judge prompt explicitly excluding general destination knowledge. A real lesson in three parts: (a) LLM judges have precision problems of their own; (b) a failing eval is a *claim*, not a verdict — read the failures before acting on the score; (c) judge prompts need few-shot examples of the boundary cases, and ideally a small human-labeled set to measure the judge against. "Who evals the eval" is a question worth raising yourself in an interview.
+
+### Production numbers (first live run)
+
+Draft: ~$0.025 and ~13s. Quote extraction: ~$0.025/email, ~8s. Grounding judge on Haiku: ~$0.003/draft. Per-designer-day at realistic volume (20 drafts + 10 extractions): well under $1 — the economics argument for the whole product in one line.

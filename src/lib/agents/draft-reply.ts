@@ -7,6 +7,7 @@ import { contextChunks, drafts } from "@/db/schema";
 import { getClientContext, getThread, getThreadMessages } from "@/lib/context";
 import { AGENCY_NAME, DESIGNER_NAME } from "@/lib/constants";
 import { retrieveContext } from "@/lib/retrieval";
+import { recordRun } from "@/lib/telemetry";
 
 // Below this many indexed chunks, retrieval isn't worth the round trip — the
 // full record is still small enough to hand over whole.
@@ -177,13 +178,16 @@ export async function draftReply(threadId: number) {
     "Draft Elena's reply to the most recent inbound message.",
   ].join("\n");
 
-  const response = await anthropic.messages.parse({
-    model: MODEL,
-    max_tokens: 16000,
-    thinking: { type: "adaptive" },
-    system: SYSTEM,
-    messages: [{ role: "user", content: userPrompt }],
-    output_config: { format: zodOutputFormat(DraftOutput) },
+  const response = await recordRun({ agent: "draft_reply", model: MODEL, threadId }, async () => {
+    const response = await anthropic.messages.parse({
+      model: MODEL,
+      max_tokens: 16000,
+      thinking: { type: "adaptive" },
+      system: SYSTEM,
+      messages: [{ role: "user", content: userPrompt }],
+      output_config: { format: zodOutputFormat(DraftOutput) },
+    });
+    return { result: response, usage: response.usage };
   });
 
   if (response.stop_reason === "refusal") {

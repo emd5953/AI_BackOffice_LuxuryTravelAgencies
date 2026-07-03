@@ -5,6 +5,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { messages, quotes } from "@/db/schema";
 import { getSupplier, getThread } from "@/lib/context";
+import { recordRun } from "@/lib/telemetry";
 
 const MODEL = "claude-opus-4-8";
 
@@ -93,13 +94,16 @@ export async function parseQuotesFromThread(threadId: number) {
     "Extract all quoted rate options.",
   ].join("\n");
 
-  const response = await anthropic.messages.parse({
-    model: MODEL,
-    max_tokens: 16000,
-    thinking: { type: "adaptive" },
-    system: SYSTEM,
-    messages: [{ role: "user", content: userPrompt }],
-    output_config: { format: zodOutputFormat(QuoteExtraction) },
+  const response = await recordRun({ agent: "parse_quote", model: MODEL, threadId }, async () => {
+    const response = await anthropic.messages.parse({
+      model: MODEL,
+      max_tokens: 16000,
+      thinking: { type: "adaptive" },
+      system: SYSTEM,
+      messages: [{ role: "user", content: userPrompt }],
+      output_config: { format: zodOutputFormat(QuoteExtraction) },
+    });
+    return { result: response, usage: response.usage };
   });
 
   if (response.stop_reason === "refusal") {

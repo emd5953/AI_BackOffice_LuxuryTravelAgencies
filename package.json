@@ -9,7 +9,9 @@
     "lint": "eslint",
     "db:push": "drizzle-kit push",
     "db:seed": "tsx src/db/seed.ts",
-    "index-context": "tsx scripts/index-context.ts"
+    "index-context": "tsx scripts/index-context.ts",
+    "eval:parse": "tsx scripts/eval-parse.ts",
+    "eval:grounding": "tsx scripts/eval-grounding.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",

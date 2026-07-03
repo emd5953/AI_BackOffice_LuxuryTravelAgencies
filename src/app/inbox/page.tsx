@@ -42,9 +42,17 @@ export default async function InboxPage() {
 
   return (
     <main className="mx-auto max-w-3xl p-6">
-      <header className="mb-6">
-        <h1 className="text-xl font-semibold">{AGENCY_NAME}</h1>
-        <p className="text-sm text-zinc-500">Inbox</p>
+      <header className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">{AGENCY_NAME}</h1>
+          <p className="text-sm text-zinc-500">Inbox</p>
+        </div>
+        <Link
+          href="/dashboard"
+          className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+        >
+          Dashboard →
+        </Link>
       </header>
 
       <ul className="divide-y divide-zinc-200 dark:divide-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-800">

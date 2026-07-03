@@ -163,6 +163,35 @@ export const intakeForms = sqliteTable("intake_forms", {
 
 // One row per retrievable fact about a client. Embedded once, retrieved by
 // cosine similarity; contentHash makes re-indexing idempotent.
+// ---------- Telemetry & evals (Phase 4) ----------
+
+// One row per LLM agent invocation — the observability spine
+export const agentRuns = sqliteTable("agent_runs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  agent: text("agent", { enum: ["draft_reply", "parse_quote", "eval_grounding"] }).notNull(),
+  model: text("model").notNull(),
+  threadId: integer("thread_id"),
+  inputTokens: integer("input_tokens"),
+  outputTokens: integer("output_tokens"),
+  costUsd: real("cost_usd"),
+  latencyMs: integer("latency_ms").notNull(),
+  success: integer("success", { mode: "boolean" }).notNull(),
+  error: text("error"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+// Eval outcomes, one row per case per run — dashboard reads latest per suite
+export const evalResults = sqliteTable("eval_results", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  suite: text("suite", { enum: ["parse_golden", "draft_grounding"] }).notNull(),
+  runId: text("run_id").notNull(), // one uuid per script invocation
+  caseName: text("case_name").notNull(),
+  pass: integer("pass", { mode: "boolean" }).notNull(),
+  score: real("score"), // 0..1 where applicable
+  detail: text("detail"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 export const contextChunks = sqliteTable("context_chunks", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   clientId: integer("client_id").notNull().references(() => clients.id),
