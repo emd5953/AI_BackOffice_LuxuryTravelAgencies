@@ -7,6 +7,7 @@ import { clients, drafts, messages, threads } from "@/db/schema";
 import { draftReply } from "@/lib/agents/draft-reply";
 import { parseQuotesFromThread } from "@/lib/agents/parse-quote";
 import { DESIGNER_EMAIL } from "@/lib/constants";
+import { retrieveContext } from "@/lib/retrieval";
 
 export async function parseQuotes(threadId: number) {
   const inserted = await parseQuotesFromThread(threadId);
@@ -45,6 +46,12 @@ export async function approveDraft(draftId: number, sentBody: string) {
 
   revalidatePath(`/inbox/${draft.threadId}`);
   revalidatePath("/inbox");
+}
+
+// Read-only — the app has no API routes, so this follows the same server
+// action pattern as the mutations above.
+export async function searchClientContext(clientId: number, query: string) {
+  return retrieveContext(clientId, query, 8);
 }
 
 export async function dismissDraft(draftId: number) {

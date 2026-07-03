@@ -110,7 +110,12 @@ export default async function ThreadPage({
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
                   Client
                 </h2>
-                <p className="font-medium text-sm">{clientCtx.client.name}</p>
+                <Link
+                  href={`/clients/${clientCtx.client.id}`}
+                  className="font-medium text-sm hover:underline"
+                >
+                  {clientCtx.client.name}
+                </Link>
                 <p className="text-xs text-zinc-500">{clientCtx.client.email}</p>
                 {clientCtx.client.bio && (
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-2 leading-relaxed">

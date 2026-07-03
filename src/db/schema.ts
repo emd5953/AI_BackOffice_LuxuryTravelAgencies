@@ -160,3 +160,19 @@ export const intakeForms = sqliteTable("intake_forms", {
   answers: text("answers", { mode: "json" }).notNull(),
   submittedAt: integer("submitted_at", { mode: "timestamp" }).notNull(),
 });
+
+// One row per retrievable fact about a client. Embedded once, retrieved by
+// cosine similarity; contentHash makes re-indexing idempotent.
+export const contextChunks = sqliteTable("context_chunks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  clientId: integer("client_id").notNull().references(() => clients.id),
+  sourceType: text("source_type", {
+    enum: ["message", "call_note", "intake_answer", "preference"],
+  }).notNull(),
+  sourceId: integer("source_id").notNull(),
+  text: text("text").notNull(),
+  contentHash: text("content_hash").notNull().unique(),
+  embedding: text("embedding", { mode: "json" }).$type<number[]>().notNull(),
+  model: text("model").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});

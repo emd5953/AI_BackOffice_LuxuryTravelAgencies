@@ -10,6 +10,7 @@ import {
   intakeForms,
   drafts,
   quotes,
+  contextChunks,
 } from "./schema";
 
 // Deterministic seed for a fictional agency: Meridian Private Travel.
@@ -26,6 +27,7 @@ function daysAgo(n: number, hour = 10): Date {
 
 async function seed() {
   // Idempotent: wipe in FK-safe order
+  await db.delete(contextChunks);
   await db.delete(quotes);
   await db.delete(drafts);
   await db.delete(intakeForms);

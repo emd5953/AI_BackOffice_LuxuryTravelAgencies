@@ -1,10 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
+import { count, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { drafts } from "@/db/schema";
+import { contextChunks, drafts } from "@/db/schema";
 import { getClientContext, getThread, getThreadMessages } from "@/lib/context";
 import { AGENCY_NAME, DESIGNER_NAME } from "@/lib/constants";
+import { retrieveContext } from "@/lib/retrieval";
+
+// Below this many indexed chunks, retrieval isn't worth the round trip — the
+// full record is still small enough to hand over whole.
+const RETRIEVAL_MIN_CHUNKS = 30;
 
 const MODEL = "claude-opus-4-8";
 
@@ -33,7 +39,13 @@ Hard rules:
 - Match the client's communication style, which you can infer from their bio, preferences, and how they write. Clients who write two lines get replies of similar economy.
 - The draft is reviewed by Elena before sending. Write it ready-to-send: no placeholders like [DATE], no meta-commentary, no options for her to choose between.`;
 
-export interface PromptContext {
+interface ThreadContext {
+  subject: string;
+  messages: { direction: string; from: string; body: string; sentAt: string }[];
+}
+
+interface FullPromptContext {
+  mode: "full";
   today: string;
   client: { name: string; email: string; bio: string | null };
   preferences: { kind: string; text: string; source: string }[];
@@ -48,11 +60,17 @@ export interface PromptContext {
     partySize: number | null;
     budgetUsd: number | null;
   }[];
-  thread: {
-    subject: string;
-    messages: { direction: string; from: string; body: string; sentAt: string }[];
-  };
+  thread: ThreadContext;
 }
+
+interface RetrievedPromptContext {
+  mode: "retrieved";
+  today: string;
+  retrieved: { chunkId: number; sourceType: string; sourceId: number; score: number }[];
+  thread: ThreadContext;
+}
+
+export type PromptContext = FullPromptContext | RetrievedPromptContext;
 
 export async function draftReply(threadId: number) {
   const thread = await getThread(threadId);
@@ -60,57 +78,101 @@ export async function draftReply(threadId: number) {
     throw new Error("Reply drafting only supports client threads in Phase 1");
   }
 
-  const ctx = await getClientContext(thread.clientId);
   const msgs = await getThreadMessages(threadId);
-
-  // Assembled explicitly and persisted with the draft — what the agent saw is
-  // always reconstructable for review and evals.
-  const promptContext: PromptContext = {
-    today: new Date().toISOString().slice(0, 10),
-    client: { name: ctx.client.name, email: ctx.client.email, bio: ctx.client.bio },
-    preferences: ctx.preferences.map((p) => ({ kind: p.kind, text: p.text, source: p.source })),
-    callNotes: ctx.callNotes.map((n) => n.body),
-    intakeForms: ctx.intakeForms.map((f) => f.answers),
-    trips: ctx.trips.map((t) => ({
-      title: t.title,
-      destination: t.destination,
-      status: t.status,
-      startDate: t.startDate,
-      endDate: t.endDate,
-      partySize: t.partySize,
-      budgetUsd: t.budgetUsd,
+  const threadContext: ThreadContext = {
+    subject: thread.subject,
+    messages: msgs.map((m) => ({
+      direction: m.direction,
+      from: m.fromAddr,
+      body: m.body,
+      sentAt: m.sentAt.toISOString(),
     })),
-    thread: {
-      subject: thread.subject,
-      messages: msgs.map((m) => ({
-        direction: m.direction,
-        from: m.fromAddr,
-        body: m.body,
-        sentAt: m.sentAt.toISOString(),
-      })),
-    },
   };
+  const today = new Date().toISOString().slice(0, 10);
+
+  const [{ chunkCount }] = await db
+    .select({ chunkCount: count() })
+    .from(contextChunks)
+    .where(eq(contextChunks.clientId, thread.clientId));
+  const useRetrieval = chunkCount >= RETRIEVAL_MIN_CHUNKS && Boolean(process.env.VOYAGE_API_KEY);
+
+  let promptContext: PromptContext;
+  let contextSections: string[];
+
+  if (useRetrieval) {
+    const lastInbound = [...msgs].reverse().find((m) => m.direction === "inbound");
+    const query = lastInbound?.body ?? thread.subject;
+    const retrieved = await retrieveContext(thread.clientId, query, 12);
+
+    // Assembled explicitly and persisted with the draft — what the agent saw
+    // is always reconstructable for review and evals.
+    promptContext = {
+      mode: "retrieved",
+      today,
+      retrieved: retrieved.map((r) => ({
+        chunkId: r.chunkId,
+        sourceType: r.sourceType,
+        sourceId: r.sourceId,
+        score: r.score,
+      })),
+      thread: threadContext,
+    };
+
+    contextSections = [
+      "# Retrieved client context",
+      JSON.stringify(
+        retrieved.map((r) => r.text),
+        null,
+        2,
+      ),
+    ];
+  } else {
+    const ctx = await getClientContext(thread.clientId);
+
+    promptContext = {
+      mode: "full",
+      today,
+      client: { name: ctx.client.name, email: ctx.client.email, bio: ctx.client.bio },
+      preferences: ctx.preferences.map((p) => ({ kind: p.kind, text: p.text, source: p.source })),
+      callNotes: ctx.callNotes.map((n) => n.body),
+      intakeForms: ctx.intakeForms.map((f) => f.answers),
+      trips: ctx.trips.map((t) => ({
+        title: t.title,
+        destination: t.destination,
+        status: t.status,
+        startDate: t.startDate,
+        endDate: t.endDate,
+        partySize: t.partySize,
+        budgetUsd: t.budgetUsd,
+      })),
+      thread: threadContext,
+    };
+
+    contextSections = [
+      "# Client",
+      JSON.stringify(promptContext.client, null, 2),
+      "",
+      "# Known preferences (kind: confirmed = client said it, inferred = deduced; treat inferred with more caution)",
+      JSON.stringify(promptContext.preferences, null, 2),
+      "",
+      "# Call notes",
+      JSON.stringify(promptContext.callNotes, null, 2),
+      "",
+      "# Intake forms",
+      JSON.stringify(promptContext.intakeForms, null, 2),
+      "",
+      "# Trips",
+      JSON.stringify(promptContext.trips, null, 2),
+    ];
+  }
 
   const userPrompt = [
-    `Today's date: ${promptContext.today}`,
+    `Today's date: ${today}`,
     "",
-    "# Client",
-    JSON.stringify(promptContext.client, null, 2),
+    ...contextSections,
     "",
-    "# Known preferences (kind: confirmed = client said it, inferred = deduced; treat inferred with more caution)",
-    JSON.stringify(promptContext.preferences, null, 2),
-    "",
-    "# Call notes",
-    JSON.stringify(promptContext.callNotes, null, 2),
-    "",
-    "# Intake forms",
-    JSON.stringify(promptContext.intakeForms, null, 2),
-    "",
-    "# Trips",
-    JSON.stringify(promptContext.trips, null, 2),
-    "",
-    `# Email thread: "${promptContext.thread.subject}"`,
-    JSON.stringify(promptContext.thread.messages, null, 2),
+    `# Email thread: "${threadContext.subject}"`,
+    JSON.stringify(threadContext.messages, null, 2),
     "",
     "Draft Elena's reply to the most recent inbound message.",
   ].join("\n");
