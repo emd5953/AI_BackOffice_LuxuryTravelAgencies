@@ -37,7 +37,7 @@ export function DraftPanel({
         <button
           onClick={() => run(() => generateDraft(threadId))}
           disabled={isPending}
-          className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-surface-raised hover:opacity-90 disabled:opacity-50"
+          className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-white shadow-float transition hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
         >
           {isPending ? "Drafting…" : "Draft reply"}
         </button>
@@ -73,21 +73,21 @@ export function DraftPanel({
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={14}
-        className="w-full rounded-lg border border-hairline bg-surface p-3 text-sm leading-relaxed text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+        className="w-full rounded-2xl border border-hairline bg-surface-raised p-3 text-sm leading-relaxed text-ink shadow-float focus:ring-2 focus:ring-accent/40 focus:outline-none"
       />
 
       <div className="flex items-center gap-2">
         <button
           onClick={() => run(() => approveDraft(draft.id, body))}
           disabled={isPending || body.trim().length === 0}
-          className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-surface-raised hover:opacity-90 disabled:opacity-50"
+          className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-white shadow-float transition hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
         >
           {isPending ? "Sending…" : "Approve & send"}
         </button>
         <button
           onClick={() => run(() => dismissDraft(draft.id))}
           disabled={isPending}
-          className="rounded-full border border-hairline px-5 py-2 text-sm text-ink-muted hover:text-ink disabled:opacity-50"
+          className="rounded-full border border-hairline bg-surface-raised px-5 py-2 text-sm text-ink-muted shadow-float hover:text-ink disabled:opacity-50"
         >
           Dismiss
         </button>

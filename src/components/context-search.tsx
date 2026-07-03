@@ -38,19 +38,19 @@ export function ContextSearch({ clientId }: { clientId: number }) {
           e.preventDefault();
           runSearch();
         }}
-        className="flex items-center gap-2"
+        className="flex items-center gap-1 rounded-full border border-hairline bg-surface-raised p-1.5 shadow-float focus-within:ring-2 focus-within:ring-accent/40"
       >
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search this client's history…"
-          className="flex-1 rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+          className="flex-1 rounded-full bg-transparent px-3 py-1.5 text-sm text-ink placeholder:text-ink-muted focus:outline-none"
         />
         <button
           type="submit"
           disabled={isPending || !query.trim()}
-          className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-surface-raised hover:opacity-90 disabled:opacity-50"
+          className="shrink-0 rounded-full bg-accent px-5 py-2 text-sm font-medium text-white shadow-float transition hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
         >
           {isPending ? "Searching…" : "Search"}
         </button>
@@ -65,9 +65,12 @@ export function ContextSearch({ clientId }: { clientId: number }) {
       )}
 
       {results && results.length > 0 && (
-        <ul className="space-y-3">
+        <ul className="stagger space-y-3">
           {results.map((r) => (
-            <li key={r.chunkId} className="rounded-xl border border-hairline p-3">
+            <li
+              key={r.chunkId}
+              className="card-in rounded-2xl border border-hairline/60 bg-surface-raised p-3 shadow-float"
+            >
               <div className="mb-1.5 flex items-center justify-between gap-3">
                 <span className="inline-block rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-muted">
                   {r.sourceType}

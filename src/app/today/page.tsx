@@ -82,8 +82,10 @@ export default async function TodayPage() {
   return (
     <div>
       <header className="mb-8">
-        <h1 className="font-display text-3xl tracking-tight text-ink">Today</h1>
-        <p className="mt-1 text-sm text-ink-muted">
+        <h1 className="font-display text-3xl tracking-tight text-ink md:text-4xl">
+          The morning, <em className="italic text-accent">curated</em>.
+        </h1>
+        <p className="mt-2 text-sm text-ink-muted">
           {AGENCY_NAME} · {today}
         </p>
       </header>
@@ -98,11 +100,11 @@ export default async function TodayPage() {
           </div>
 
           {openSuggestions.length === 0 ? (
-            <p className="rounded-2xl border border-hairline p-4 text-sm text-ink-muted">
+            <p className="rounded-3xl border border-hairline/60 bg-surface-raised p-4 text-sm text-ink-muted shadow-float">
               No open suggestions — refresh to scan the book of business.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="stagger space-y-3">
               {openSuggestions.map((s) => (
                 <SuggestionCard key={s.id} suggestion={s} />
               ))}
@@ -110,7 +112,7 @@ export default async function TodayPage() {
           )}
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-hairline bg-surface-raised">
+        <section className="overflow-hidden rounded-3xl border border-hairline/60 bg-surface-raised shadow-float">
           <header className="border-b border-hairline p-4">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Awaiting your reply
@@ -124,7 +126,7 @@ export default async function TodayPage() {
                 <li key={thread.id}>
                   <Link
                     href={`/inbox/${thread.id}`}
-                    className="flex items-center justify-between gap-3 p-4 hover:bg-surface"
+                    className="flex items-center justify-between gap-3 p-4 transition-colors hover:bg-surface"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-ink">{thread.clientName}</p>

@@ -30,7 +30,7 @@ export function ParsePanel({
           });
         }}
         disabled={isPending || !tripId}
-        className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-surface-raised hover:opacity-90 disabled:opacity-50"
+        className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-white shadow-float transition hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
       >
         {isPending ? "Extracting…" : quoteCount > 0 ? "Re-extract quotes" : "Extract quotes"}
       </button>

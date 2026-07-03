@@ -28,7 +28,7 @@ export default async function ClientPage({
       </header>
 
       <div className="space-y-6">
-        <section className="rounded-2xl border border-hairline bg-surface-raised p-5">
+        <section className="rounded-3xl border border-hairline/60 bg-surface-raised p-5 shadow-float">
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Preferences
           </h2>
@@ -52,7 +52,7 @@ export default async function ClientPage({
           </ul>
         </section>
 
-        <section className="rounded-2xl border border-hairline bg-surface-raised p-5">
+        <section className="rounded-3xl border border-hairline/60 bg-surface-raised p-5 shadow-float">
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Call notes
           </h2>
@@ -69,7 +69,7 @@ export default async function ClientPage({
           </ul>
         </section>
 
-        <section className="rounded-2xl border border-hairline bg-surface-raised p-5">
+        <section className="rounded-3xl border border-hairline/60 bg-surface-raised p-5 shadow-float">
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Trips
           </h2>
@@ -89,7 +89,7 @@ export default async function ClientPage({
           </ul>
         </section>
 
-        <section className="rounded-2xl border border-hairline bg-surface-raised p-5">
+        <section className="rounded-3xl border border-hairline/60 bg-surface-raised p-5 shadow-float">
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Memory search
           </h2>

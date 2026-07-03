@@ -45,7 +45,7 @@ export default async function ThreadPage({
     <div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Conversation */}
-        <section className="overflow-hidden rounded-2xl border border-hairline bg-surface-raised lg:col-span-2">
+        <section className="overflow-hidden rounded-3xl border border-hairline/60 bg-surface-raised shadow-float lg:col-span-2">
           <header className="border-b border-hairline p-4">
             <h1 className="font-display text-lg text-ink">{thread.subject}</h1>
             <p className="mt-0.5 text-xs text-ink-muted">
@@ -57,8 +57,10 @@ export default async function ThreadPage({
             {msgs.map((m) => (
               <div
                 key={m.id}
-                className={`rounded-lg p-3 text-sm leading-relaxed whitespace-pre-wrap ${
-                  m.direction === "inbound" ? "mr-8 bg-surface" : "ml-8 bg-accent-soft"
+                className={`rounded-2xl p-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                  m.direction === "inbound"
+                    ? "mr-8 border border-hairline bg-surface"
+                    : "ml-8 bg-accent-soft"
                 }`}
               >
                 <div className="mb-1.5 flex items-center justify-between">
@@ -100,7 +102,7 @@ export default async function ThreadPage({
         <aside className="space-y-4">
           {clientCtx && (
             <>
-              <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+              <div className="rounded-3xl border border-hairline/60 bg-surface-raised p-4 shadow-float">
                 <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Client
                 </h2>
@@ -118,7 +120,7 @@ export default async function ThreadPage({
                 )}
               </div>
 
-              <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+              <div className="rounded-3xl border border-hairline/60 bg-surface-raised p-4 shadow-float">
                 <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Preferences
                 </h2>
@@ -141,7 +143,7 @@ export default async function ThreadPage({
                 </ul>
               </div>
 
-              <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+              <div className="rounded-3xl border border-hairline/60 bg-surface-raised p-4 shadow-float">
                 <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Call notes
                 </h2>
@@ -160,7 +162,7 @@ export default async function ThreadPage({
                 </ul>
               </div>
 
-              <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+              <div className="rounded-3xl border border-hairline/60 bg-surface-raised p-4 shadow-float">
                 <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Trips
                 </h2>
@@ -180,7 +182,7 @@ export default async function ThreadPage({
           )}
 
           {supplier && (
-            <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+            <div className="rounded-3xl border border-hairline/60 bg-surface-raised p-4 shadow-float">
               <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                 Supplier
               </h2>

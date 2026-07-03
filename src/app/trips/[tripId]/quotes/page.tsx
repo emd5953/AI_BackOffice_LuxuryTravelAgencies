@@ -63,7 +63,7 @@ export default async function QuotesPage({
           return (
             <section
               key={supplierId}
-              className="overflow-hidden rounded-2xl border border-hairline bg-surface-raised"
+              className="overflow-hidden rounded-3xl border border-hairline/60 bg-surface-raised shadow-float"
             >
               <header className="flex items-center justify-between border-b border-hairline p-4">
                 <div>

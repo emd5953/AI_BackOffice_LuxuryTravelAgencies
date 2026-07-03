@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 const fraunces = Fraunces({
   variable: "--font-display",
   subsets: ["latin"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {

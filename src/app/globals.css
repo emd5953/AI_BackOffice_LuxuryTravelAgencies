@@ -1,17 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --surface: #f7f4ee;
-  --surface-raised: #fdfcf9;
-  --ink: #2b2118;
-  --ink-muted: #7a6e63;
-  --hairline: #e4ddd2;
-  --accent: #a4502f;
-  --accent-soft: #f3e5dc;
+  --surface: #faf5ec;
+  --surface-raised: #ffffff;
+  --ink: #2a2018;
+  --ink-muted: #93826f;
+  --hairline: #eadfce;
+  --accent: #b36a2e;
+  --accent-soft: #f7e7cf;
   --positive: #4a6b4f;
   --warn: #9a6a1f;
-  --warn-soft: #f5ebd8;
+  --warn-soft: #f6ebd6;
   --danger: #8c3b2e;
+
+  --dot-color: #dfd3be;
+  --sunset-glow-alpha: 0.18;
+
+  --shadow-float: 0 1px 2px rgba(42, 32, 24, 0.05), 0 10px 30px -8px rgba(42, 32, 24, 0.12);
+  --shadow-lift: 0 2px 4px rgba(42, 32, 24, 0.06), 0 18px 44px -10px rgba(42, 32, 24, 0.18);
 }
 
 @theme inline {
@@ -29,23 +35,93 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-display);
+  --shadow-float: var(--shadow-float);
+  --shadow-lift: var(--shadow-lift);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --surface: #191512;
-    --surface-raised: #211c18;
-    --ink: #ede6db;
-    --ink-muted: #a79a8b;
-    --hairline: #37302a;
-    --accent: #d08a5f;
-    --accent-soft: #33241c;
-    --warn-soft: #2e2417;
+    --surface: #1b1611;
+    --surface-raised: #251e17;
+    --ink: #f0e7da;
+    --ink-muted: #a5947f;
+    --hairline: #3a3128;
+    --accent: #d99355;
+    --accent-soft: #372817;
+    --warn-soft: #2f2618;
+
+    --dot-color: #2b241d;
+    --sunset-glow-alpha: 0.1;
+
+    --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 30px -8px rgba(0, 0, 0, 0.5);
+    --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.4), 0 18px 44px -10px rgba(0, 0, 0, 0.6);
   }
 }
 
 body {
-  background: var(--surface);
+  position: relative;
+  background-color: var(--surface);
+  background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+  background-size: 24px 24px;
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    80% 50% at 50% -10%,
+    rgba(217, 154, 78, var(--sunset-glow-alpha)),
+    transparent 70%
+  );
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-in {
+  animation: fade-up 0.45s ease-out both;
+}
+
+.stagger > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.stagger > *:nth-child(2) {
+  animation-delay: 40ms;
+}
+.stagger > *:nth-child(3) {
+  animation-delay: 80ms;
+}
+.stagger > *:nth-child(4) {
+  animation-delay: 120ms;
+}
+.stagger > *:nth-child(5) {
+  animation-delay: 160ms;
+}
+.stagger > *:nth-child(6) {
+  animation-delay: 200ms;
+}
+.stagger > *:nth-child(7) {
+  animation-delay: 240ms;
+}
+.stagger > *:nth-child(8) {
+  animation-delay: 280ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-in {
+    animation: none;
+  }
 }

@@ -105,30 +105,32 @@ export default async function DashboardPage() {
   return (
     <div>
       <header className="mb-8">
-        <h1 className="font-display text-3xl tracking-tight text-ink">Dashboard</h1>
-        <p className="mt-1 text-sm text-ink-muted">Agent telemetry, evals, and draft quality</p>
+        <h1 className="font-display text-3xl tracking-tight text-ink md:text-4xl">
+          Operations, <em className="italic text-accent">measured</em>.
+        </h1>
+        <p className="mt-2 text-sm text-ink-muted">Agent telemetry, evals, and draft quality</p>
       </header>
 
-      <div className="space-y-6">
+      <div className="stagger space-y-6">
         {/* Stat cards */}
-        <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+        <section className="card-in stagger grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="card-in rounded-3xl border border-hairline/60 bg-surface-raised p-4 shadow-float">
             <p className="text-xs text-ink-muted">Total agent runs</p>
             <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">{data.totalRuns}</p>
           </div>
-          <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+          <div className="card-in rounded-3xl border border-hairline/60 bg-surface-raised p-4 shadow-float">
             <p className="text-xs text-ink-muted">Success rate</p>
             <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
               {data.successRate != null ? `${(data.successRate * 100).toFixed(0)}%` : "—"}
             </p>
           </div>
-          <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+          <div className="card-in rounded-3xl border border-hairline/60 bg-surface-raised p-4 shadow-float">
             <p className="text-xs text-ink-muted">Total cost</p>
             <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
               ${data.totalCost.toFixed(2)}
             </p>
           </div>
-          <div className="rounded-2xl border border-hairline bg-surface-raised p-4">
+          <div className="card-in rounded-3xl border border-hairline/60 bg-surface-raised p-4 shadow-float">
             <p className="text-xs text-ink-muted">Median latency</p>
             <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
               {data.medianLatency != null ? `${Math.round(data.medianLatency).toLocaleString()}ms` : "—"}
@@ -137,7 +139,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Per-agent table */}
-        <section className="overflow-hidden rounded-2xl border border-hairline bg-surface-raised">
+        <section className="card-in overflow-hidden rounded-3xl border border-hairline/60 bg-surface-raised shadow-float">
           <header className="border-b border-hairline p-4">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Per-agent
@@ -187,7 +189,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Draft lifecycle */}
-        <section className="rounded-2xl border border-hairline bg-surface-raised p-5">
+        <section className="card-in rounded-3xl border border-hairline/60 bg-surface-raised p-5 shadow-float">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Draft lifecycle
           </h2>
@@ -222,7 +224,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Latest evals */}
-        <section className="rounded-2xl border border-hairline bg-surface-raised p-5">
+        <section className="card-in rounded-3xl border border-hairline/60 bg-surface-raised p-5 shadow-float">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Latest evals
           </h2>
@@ -268,7 +270,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Recent runs */}
-        <section className="overflow-hidden rounded-2xl border border-hairline bg-surface-raised">
+        <section className="card-in overflow-hidden rounded-3xl border border-hairline/60 bg-surface-raised shadow-float">
           <header className="border-b border-hairline p-4">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Recent runs

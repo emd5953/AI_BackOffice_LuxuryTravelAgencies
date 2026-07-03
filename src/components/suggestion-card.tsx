@@ -53,7 +53,7 @@ export function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
   if (resolved) return null;
 
   return (
-    <div className="space-y-2 rounded-2xl border border-hairline bg-surface-raised p-5">
+    <div className="card-in space-y-2 rounded-3xl border border-hairline/60 bg-surface-raised p-5 shadow-float">
       <div className="flex flex-wrap items-center gap-2">
         <span
           className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${urgency.className}`}
@@ -106,14 +106,14 @@ export function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
         <button
           onClick={() => resolve("done")}
           disabled={isPending}
-          className="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-surface-raised hover:opacity-90 disabled:opacity-50"
+          className="rounded-full bg-accent px-4 py-1.5 text-xs font-medium text-white shadow-float transition hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
         >
           Done
         </button>
         <button
           onClick={() => resolve("dismissed")}
           disabled={isPending}
-          className="rounded-full border border-hairline px-3 py-1.5 text-xs text-ink-muted hover:text-ink disabled:opacity-50"
+          className="rounded-full border border-hairline bg-surface-raised px-4 py-1.5 text-xs text-ink-muted shadow-float hover:text-ink disabled:opacity-50"
         >
           Dismiss
         </button>
