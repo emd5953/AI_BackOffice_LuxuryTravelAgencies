@@ -1,74 +1,67 @@
-# AI Back Office for Luxury Travel Agencies
+# Analogue — AI Back Office for Luxury Travel Designers
 
-An AI-native back office for luxury travel designers — the agentic layer that takes repetitive coordination work off a designer's plate so they can spend their time on judgment, taste, and client relationships.
+**Live: [ai-back-office-analogue.vercel.app](https://ai-back-office-analogue.vercel.app)**
 
-**The core pattern: drafts, not blanks. Agents do the first pass on everything; the designer keeps the send button.**
+Luxury travel designers sell judgment and taste — but spend their days on coordination: answering repetitive email, chasing lodges for rates, re-typing quotes into comparisons, and remembering that a client mentioned Patagonia six months ago. This is a working agentic back office that takes the first pass at all of it.
 
----
-
-## The problem
-
-Luxury travel agencies (think Abercrombie & Kent, boutique operators, independent advisors) sell a high-touch, done-for-you service: bespoke itineraries, private guides, exclusive access, on-the-ground management. The product is human judgment and taste.
-
-But most of a designer's day isn't judgment — it's coordination:
-
-- Answering the same intake questions over email
-- Chasing three lodges for rates and availability, then re-typing the answers into a comparison
-- Copying call notes into a CRM nobody reads
-- Rebuilding itinerary documents every time one hotel changes
-- Remembering that a client mentioned Patagonia six months ago, when availability finally opens
-
-The context needed to do this well is scattered across forms, inboxes, call notes, PDFs, and the designer's memory. The repetitive work crowds out the work that actually differentiates a great trip.
-
-## The designer's data environment
-
-Everything the system reasons over already exists in an agency today — it's just fragmented:
-
-| Source | Real-world examples |
-|---|---|
-| **Intake forms** | Trip questionnaires: party size, dates, budget band, pace preference ("two-hotel max"), dietary needs, celebration context ("30th anniversary") |
-| **Emails** | Client threads ("can we add two nights in Kyoto?"), supplier threads (rate quotes, room-category availability, contract terms) |
-| **Call notes** | "Wife hates boats. Loved the guide in Morocco — ask for someone similar. Kids are 9 and 12, need connecting rooms." |
-| **Itineraries** | Day-by-day documents with hotels, private guides, transfers, restaurant reservations, confirmation numbers |
-| **Client history** | Past trips, spend patterns, preferences confirmed vs. inferred, anniversaries and birthdays |
-| **Supplier records** | Preferred rates, commission terms, on-the-ground contacts, which lodge manager responds fastest |
-
-**Live inventory** is the other half: real-time availability and rates from hotels, lodges, guides, and transfer providers — via APIs where they exist (major hotel groups, GDS), and via structured email parsing where they don't (most boutique lodges and DMCs quote by email). A unified inventory layer normalizes both into: *property, room category, dates, rate, hold expiry*.
-
-## How the agent layer works
+**The core pattern: drafts, not blanks.** Agents do the first pass on everything; the designer keeps the send button.
 
 ![Architecture diagram](docs/agent_architecture.png)
 
-Agents connect the context layer to the inventory layer and do real work on the designer's behalf:
+## What it does
 
-1. **Ingest & structure** — every form, email, and call note is parsed into a per-client context graph (preferences, constraints, history, open threads). Retrieval + embeddings make it queryable.
-2. **Draft client communications** — replies to client emails arrive pre-written in the agency's voice, grounded in the client's history and the live state of their trip. The designer edits and sends.
-3. **Run supplier coordination** — the agent emails lodges for rates/availability, parses the replies, and tables the options side by side with commission and hold-expiry data.
-4. **Assemble itineraries** — first-draft day-by-day itineraries built from the client's stated constraints and live availability, ready for the designer to reshape.
-5. **Surface proactive suggestions** — "The Meyers mentioned Patagonia in March; November availability just opened at the lodge they shortlisted."
+| Surface | The agent's first pass | The designer's decision |
+|---|---|---|
+| **Today** (`/today`) | Scans the whole book of business and surfaces deadlines, stale threads, and blockers — resolving relative dates like *"can hold till Friday"* against when the email arrived, with every claim citing its source | Done / dismiss (dismissals are remembered across regenerations) |
+| **Inbox** (`/inbox`) | Drafts client replies grounded in the full client record — call notes, intake forms, preferences — and self-reports what it couldn't verify into a "needs your judgment" panel | Edit, approve & send, or dismiss |
+| **Quotes** (`/trips/[id]/quotes`) | Parses messy supplier emails into a normalized rate comparison — European decimals (`USD 1.890` = $1,890), per-person vs per-room scopes, NET vs gross, buried promos and hold deadlines | Reads a table where every number shows its arithmetic and every assumption is a visible ⚠ warning |
+| **Clients** (`/clients/[id]`) | Semantic memory search over everything known about a client — "boats" finds *"Sarah: no boats"* from a call note | Browses preferences labeled confirmed vs inferred, each traceable to its source |
+| **Dashboard** (`/dashboard`) | — | Cost/latency/token telemetry per agent, draft acceptance rate and edit distance, latest eval results |
 
-Every action flows through a **human-oversight gate**: agents draft, compare, and propose — designers approve, edit, or override. Evals track draft-acceptance rates, factual grounding, and the long tail of cases where the model gets it wrong.
+## The trust architecture
 
-## The product surface
+This is the part that matters in production:
 
-The interface a designer lives in day to day:
+- **Agents cannot act on the outside world.** The drafting agent can only create `pending` rows; the single send path is a human-triggered action with an atomic claim (a concurrency race here was found by adversarial review and fixed with a regression test — two simultaneous approvals produce exactly one send).
+- **The model extracts; the code computes.** Rate totals are deterministic TypeScript that prints its own formula and refuses to guess — party size unknown means a dash and a warning, never a silently wrong number.
+- **Everything cites its provenance.** Preferences carry confirmed/inferred labels and source references; every quote row links to the exact email it came from; every draft stores the exact context the model saw (`promptContext`), so a bad draft decomposes into "retrieval missed the fact" vs "the model ignored it."
+- **Evals are load-bearing.** A 21-assertion golden suite re-runs extraction on trap emails before any prompt change ships; an LLM-judge grounding eval verifies draft claims against stored context. First judge run scored a good draft 0.50 by over-flagging general knowledge — documented, not hidden: [who evals the eval](docs/senior-reviews.md).
 
-- **Today view** — the morning queue: drafted client replies awaiting review, supplier responses tabled and compared, proactive nudges ranked by urgency.
-- **Client workspace** — one page per client: full context graph, open threads, trip pipeline, preference profile (confirmed vs. inferred, each traceable to its source).
-- **Trip builder** — the itinerary canvas: drag-to-reorder days, live availability inline, agent-proposed alternatives when something falls through.
-- **Approval queue** — everything the agent wants to send or book, with a diff-style view of what it drafted and why. Nothing leaves the building without a human click.
+## Numbers (first live runs)
 
-## Proposed stack
+- Golden extraction suite: **21/21** — including the `USD 1.890` European-decimal trap and per-person-scope pricing
+- Draft generation: **~$0.025, ~13s** · quote extraction: **~$0.025/email** · Haiku grounding judge: **~$0.003/draft**
+- A designer-day at realistic volume (20 drafts + 10 extractions): **well under $1**
 
-- **Product**: TypeScript, Next.js/React, serverless backend
-- **AI**: Claude API for agents and drafting, tool use for supplier/inventory actions, embeddings + retrieval over the context graph, structured evals from day one
-- **Integrations**: email (Gmail API), hotel/GDS APIs where available, structured email parsing for the long tail of boutique suppliers
+## Stack
 
-## Status
+Next.js 16 (App Router, server actions) · TypeScript · Tailwind v4 · Drizzle ORM · Supabase Postgres (transaction pooler, `prepare: false`) · `claude-opus-4-8` with adaptive thinking + structured outputs (Zod) · Voyage `voyage-4` embeddings with brute-force cosine retrieval (a vector DB at 20 chunks would be résumé-driven engineering) · Vercel
 
-Concept stage. This repo starts from a written product thesis; next steps are:
+## The engineering story
 
-1. Model the domain: client, trip, supplier, inventory, thread
-2. Build the context-ingestion pipeline (email + forms → context graph)
-3. Ship the first agent workflow end to end: supplier rate request → parsed replies → comparison table → designer approval
-4. Layer on drafting, itinerary assembly, and proactive suggestions
+The interesting artifacts are in `docs/`:
+
+- **[senior-reviews.md](docs/senior-reviews.md)** — every phase's design decisions in defend-this-in-an-interview form: provenance columns, columns-vs-blobs, the check-then-act race, prompt-injection posture ("model warnings are UX, not a security boundary"), the Postgres migration measured against the "cheap to reverse" claim
+- **[project-journal.md](docs/project-journal.md)** — the narrative build log
+- **[sessions/](docs/sessions/)** — the full, readable transcripts of the AI-orchestrated build: one model planning and reviewing, subagents implementing from self-contained specs, an adversarial cold-context reviewer that found 10 real findings (2 HIGH)
+
+## Running locally
+
+```sh
+npm install
+# .env.local:
+#   ANTHROPIC_API_KEY=...   (agents)
+#   VOYAGE_API_KEY=...      (embeddings)
+#   DATABASE_URL=...        (Postgres, pooled)
+#   DIRECT_URL=...          (Postgres, direct/session — for schema pushes)
+npm run db:push && npm run db:seed
+npm run index-context        # embed client context
+npm run dev                  # → localhost:3000
+
+npm run eval:parse           # golden extraction suite (live API)
+npm run eval:grounding       # LLM-judge draft grounding (live API)
+```
+
+## Why this exists
+
+Built as a working study of the skills in [Analogue](https://travelanalogue.com)'s founding-engineer role: agentic workflows with real human oversight, structured outputs, retrieval, evals, and the long tail of cases where the model gets it wrong — learned by shipping them, not reading about them. The demo agency (Meridian Private Travel), its designer Elena, and all client data are fictional.
