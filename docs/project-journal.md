@@ -150,9 +150,21 @@ sessions.
 - **Deployed**: https://ai-back-office-analogue.vercel.app (Vercel + Supabase).
   All routes verified serving production data.
 
+### 2026-07-03 (close of build)
+- **Vercel Web Analytics** added; **README rewritten** as the application
+  artifact (live URL, trust architecture, eval numbers, engineering-story
+  pointers, honest origin note naming Analogue).
+- **Agent progress panel**: floating card on Refresh suggestions / Draft
+  reply / Extract quotes — phase labels, elapsed timer, asymptotic progress
+  bar, ETA = median of the last 20 real runs from agent_runs. The
+  observability layer feeds the loading UX.
+- **Build declared done.** Deployed at ai-back-office-analogue.vercel.app.
+
 ## Remaining roadmap
 
-- Application track: README polish (screenshots, live URL), the note to
-  Bjarni, mock interview off senior-reviews.md
+- Application track: the note to Bjarni; mock interview off
+  senior-reviews.md
+- One-click production check: Draft reply on the live Meyer thread
+  (verifies API keys in Vercel env)
 - Backlog: grounding-judge calibration; streaming draft generation; Gmail
   API swap-in for the simulated inbox
