@@ -2,30 +2,45 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import dawnMist from "../../public/images/background_2.jpg";
 import { RotatingWord } from "./rotating-word";
 
-const LEAVE_MS = 1700;
+const VEIL_MS = 1700;
+
+type Stage = "hero" | "covering" | "intro" | "leaving";
 
 export function LandingHero() {
   const router = useRouter();
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [hovered, setHovered] = useState(false);
-  const [leaving, setLeaving] = useState(false);
+  const [stage, setStage] = useState<Stage>("hero");
+
+  const veilOn = stage === "covering" || stage === "leaving";
+  const busy = stage !== "hero";
 
   function enter() {
-    if (leaving) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      router.push("/way");
-      return;
-    }
-    setLeaving(true);
-    setTimeout(() => router.push("/way"), LEAVE_MS);
+    if (busy) return;
+    setStage("covering");
+    setTimeout(() => {
+      setStage("intro");
+      const video = videoRef.current;
+      if (!video) return;
+      video.play().catch(() => {
+        video.muted = true;
+        video.play().catch(() => onIntroEnded());
+      });
+    }, VEIL_MS);
+  }
+
+  function onIntroEnded() {
+    setStage("leaving");
+    setTimeout(() => router.push("/way"), VEIL_MS);
   }
 
   return (
     <section
-      className={`relative min-h-screen overflow-hidden ${leaving ? "hero-leaving" : ""}`}
+      className={`relative min-h-screen overflow-hidden ${stage === "covering" ? "hero-leaving" : ""}`}
     >
       <div className="hero-photo absolute inset-0">
         <Image
@@ -59,12 +74,12 @@ export function LandingHero() {
             aria-label="Enter — built for the designers who know the way"
             className="word-gateway inline-block"
           >
-            <RotatingWord paused={hovered || leaving} />
+            <RotatingWord paused={hovered || busy} />
           </button>
           <span
             aria-hidden="true"
             className={`pointer-events-none absolute top-[72%] left-1/2 -translate-x-[28%] bg-[#2a2114]/70 px-4 py-1.5 font-sans text-[11px] not-italic tracking-[0.28em] whitespace-nowrap text-[#fdf7e7]/90 uppercase backdrop-blur-sm transition-all duration-500 ease-out md:text-xs ${
-              hovered && !leaving
+              hovered && !busy
                 ? "translate-y-0 opacity-100 delay-150"
                 : "translate-y-2 opacity-0"
             }`}
@@ -81,7 +96,24 @@ export function LandingHero() {
         A working prototype — drafts, not blanks.
       </p>
 
-      <div className="hero-veil" aria-hidden="true" />
+      <div
+        className={`absolute inset-0 z-30 bg-black transition-opacity duration-700 ${
+          stage === "intro" || stage === "leaving"
+            ? "opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
+      >
+        <video
+          ref={videoRef}
+          src="/videos/analogue_intro.mp4"
+          preload="auto"
+          playsInline
+          onEnded={onIntroEnded}
+          className="pointer-events-none h-full w-full object-cover"
+        />
+      </div>
+
+      <div className={`hero-veil ${veilOn ? "hero-veil-on" : ""}`} aria-hidden="true" />
     </section>
   );
 }

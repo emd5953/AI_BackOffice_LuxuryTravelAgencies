@@ -242,14 +242,14 @@ body::before {
 .hero-veil {
   position: absolute;
   inset: 0;
-  z-index: 20;
+  z-index: 40;
   pointer-events: none;
   background: #f3e6c8;
   opacity: 0;
   transition: opacity 1.6s ease;
 }
 
-.hero-leaving .hero-veil {
+.hero-veil-on {
   opacity: 1;
 }
 
