@@ -18,13 +18,17 @@ const LETTER_FADE_MS = 400;
 const HOLD_MS = 1500;
 const EXIT_MS = 500;
 
-export function RotatingWord() {
+export function RotatingWord({ paused = false }: { paused?: boolean }) {
   const [index, setIndex] = useState(0);
   const [exiting, setExiting] = useState(false);
 
   const word = WORDS[index];
 
   useEffect(() => {
+    if (paused) {
+      setExiting(false);
+      return;
+    }
     const typeMs = word.length * LETTER_STAGGER_MS + LETTER_FADE_MS;
     const exitTimer = setTimeout(() => setExiting(true), typeMs + HOLD_MS);
     const nextTimer = setTimeout(() => {
@@ -35,7 +39,7 @@ export function RotatingWord() {
       clearTimeout(exitTimer);
       clearTimeout(nextTimer);
     };
-  }, [word]);
+  }, [word, paused]);
 
   return (
     <span key={word} className={`inline-block ${exiting ? "word-out" : ""}`}>

@@ -172,6 +172,142 @@ body::before {
   }
 }
 
+/* Hero gateway: the rotating word is the door — hover draws it in, a halo blooms */
+.word-gateway {
+  position: relative;
+  cursor: pointer;
+  transition:
+    transform 0.8s cubic-bezier(0.23, 1, 0.32, 1),
+    filter 0.8s ease;
+}
+
+.word-gateway::before {
+  content: "";
+  position: absolute;
+  inset: -55% -35%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 244, 214, 0.75),
+    rgba(255, 222, 165, 0.32) 55%,
+    transparent 100%
+  );
+  filter: blur(18px);
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    opacity 0.9s ease,
+    transform 0.9s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .word-gateway:hover {
+    transform: scale(0.94);
+    filter: brightness(1.3) drop-shadow(0 0 14px rgba(255, 246, 220, 0.9))
+      drop-shadow(0 0 40px rgba(255, 218, 150, 0.6));
+  }
+
+  .word-gateway:hover::before {
+    opacity: 1;
+    transform: scale(1);
+    animation: aura-breathe 2.4s ease-in-out 0.9s infinite alternate;
+  }
+}
+
+.word-gateway:active {
+  transform: scale(0.91);
+}
+
+@keyframes aura-breathe {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0.75;
+    transform: scale(1.08);
+  }
+}
+
+.hero-photo {
+  transform: scale(1);
+  transition: transform 2s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.hero-leaving .hero-photo {
+  transform: scale(1.08);
+}
+
+.hero-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background: #f3e6c8;
+  opacity: 0;
+  transition: opacity 1.6s ease;
+}
+
+.hero-leaving .hero-veil {
+  opacity: 1;
+}
+
+/* /way: arrive slowly — photo settles from a gentle zoom, cream veil lifts */
+.way-photo {
+  animation: way-zoom 2.8s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes way-zoom {
+  from {
+    transform: scale(1.09);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.way-veil {
+  background: #f3e6c8;
+  animation: way-fade 1.5s ease both;
+}
+
+@keyframes way-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.way-tagline {
+  animation: fade-up 1.2s ease-out 0.9s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word-gateway,
+  .hero-photo,
+  .hero-veil {
+    transition: none;
+  }
+  .word-gateway:hover {
+    transform: none;
+  }
+  .hero-leaving .hero-photo {
+    transform: none;
+  }
+  .way-photo {
+    animation: none;
+  }
+  .way-veil {
+    animation: way-fade 0.4s ease both;
+  }
+  .way-tagline {
+    animation: fade-up 0.4s ease-out both;
+  }
+}
+
 /* Landing hero: warm scrim over the photograph so headline text stays legible */
 .landing-scrim {
   position: absolute;

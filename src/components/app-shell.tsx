@@ -18,7 +18,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     day: "numeric",
   });
 
-  if (pathname === "/") {
+  if (pathname === "/" || pathname === "/way") {
     return <>{children}</>;
   }
 
