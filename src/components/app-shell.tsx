@@ -3,13 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-
-const NAV_ITEMS = [
-  { href: "/today", label: "Today" },
-  { href: "/inbox", label: "Inbox" },
-  { href: "/clients", label: "Clients" },
-  { href: "/dashboard", label: "Dashboard" },
-] as const;
+import { NAV_ITEMS } from "@/lib/nav-items";
 
 function isActive(pathname: string, href: string) {
   if (href === "/today") return pathname === "/today" || pathname.startsWith("/today/");

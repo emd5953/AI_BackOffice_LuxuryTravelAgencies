@@ -80,6 +80,12 @@ body::before {
   );
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -126,22 +132,34 @@ body::before {
   }
 }
 
-/* Landing hero: pure-CSS Tuscan sunset scene */
+/* Landing hero: placeholder golden-hour scene — swap for a photographed background when available */
 .landing-sky {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #f5be7e 0%, #f3cfa2 30%, #f0ddc2 55%, #efe7d8 100%);
+  background: linear-gradient(180deg, #e8935a 0%, #ec9c63 20%, #e2884f 42%, #d97f48 58%, #e8c896 78%, #eee2c8 100%);
 }
 
 .landing-glow {
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    45% 35% at 50% 18%,
-    rgba(255, 236, 200, 0.9),
-    rgba(245, 190, 126, 0) 70%
+    28% 20% at 50% 10%,
+    rgba(255, 244, 214, 0.95),
+    rgba(240, 168, 104, 0) 70%
   );
   animation: sunset-breathe 14s ease-in-out infinite alternate;
+}
+
+.landing-mountains {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 25%,
+    rgba(150, 130, 165, 0.28) 45%,
+    rgba(150, 130, 165, 0.15) 60%,
+    transparent 75%
+  );
 }
 
 .landing-hill-1,
@@ -176,7 +194,7 @@ body::before {
 .landing-fog {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent, rgba(239, 231, 216, 0.55));
+  background: linear-gradient(180deg, transparent 55%, rgba(239, 231, 216, 0.55) 100%);
 }
 
 @keyframes sunset-breathe {
@@ -206,6 +224,16 @@ body::before {
       45% 35% at 50% 18%,
       rgba(200, 150, 100, 0.35),
       rgba(138, 90, 51, 0) 70%
+    );
+  }
+
+  .landing-mountains {
+    background: linear-gradient(
+      180deg,
+      transparent 25%,
+      rgba(70, 55, 90, 0.35) 45%,
+      rgba(70, 55, 90, 0.2) 60%,
+      transparent 75%
     );
   }
 
