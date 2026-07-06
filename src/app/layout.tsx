@@ -35,9 +35,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('analogue-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}",
+          }}
+        />
         <AppShell>{children}</AppShell>
         <Analytics />
       </body>

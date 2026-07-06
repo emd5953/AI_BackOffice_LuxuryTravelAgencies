@@ -41,8 +41,25 @@
   --shadow-lift: var(--shadow-lift);
 }
 
+:root[data-theme="dark"] {
+  --surface: #261d0e;
+  --surface-raised: #332712;
+  --ink: #f4e6c0;
+  --ink-muted: #b3a06e;
+  --hairline: #46381d;
+  --accent: #e8a256;
+  --accent-soft: #46320f;
+  --warn-soft: #3a2e10;
+
+  --dot-color: #322812;
+  --sunset-glow-alpha: 0.16;
+
+  --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 30px -8px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.4), 0 18px 44px -10px rgba(0, 0, 0, 0.6);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --surface: #261d0e;
     --surface-raised: #332712;
     --ink: #f4e6c0;
@@ -169,6 +186,106 @@ body::before {
   }
   .word-out {
     animation: none;
+  }
+}
+
+/* Dark mode on the landing hero: the sun slowly sets */
+.hero-photo img {
+  transition: filter 3.5s ease;
+}
+
+:root[data-theme="dark"] .hero-photo img {
+  filter: brightness(0.42) saturate(0.68);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hero-photo img {
+    filter: brightness(0.42) saturate(0.68);
+  }
+}
+
+/* Hint bird: a click on the landscape sends it gliding toward the word */
+.hero-bird {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 15;
+  width: 30px;
+  height: 15px;
+  margin: -7px 0 0 -15px;
+  color: rgba(61, 52, 35, 0.85);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.hero-bird svg {
+  width: 100%;
+  height: 100%;
+  animation: bird-flap 0.32s ease-in-out infinite;
+}
+
+@keyframes bird-flap {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.45);
+  }
+}
+
+/* Hint cloud: a thought bubble drifting up from where the birds took off */
+.hint-cloud {
+  position: absolute;
+  z-index: 25;
+  pointer-events: none;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(253, 247, 231, 0.55);
+  backdrop-filter: blur(6px);
+  color: rgba(74, 61, 36, 0.85);
+  font-family: var(--font-geist-sans);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  animation: cloud-pop 1.6s ease-out both;
+  transition: opacity 0.9s ease;
+}
+
+.hint-cloud::before,
+.hint-cloud::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(253, 247, 231, 0.5);
+}
+
+.hint-cloud::before {
+  width: 9px;
+  height: 9px;
+  bottom: -11px;
+  left: 26%;
+}
+
+.hint-cloud::after {
+  width: 4px;
+  height: 4px;
+  bottom: -19px;
+  left: 22%;
+}
+
+.hint-cloud-leaving {
+  opacity: 0;
+}
+
+@keyframes cloud-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -120%) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -140%) scale(1);
   }
 }
 

@@ -5,16 +5,25 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import dawnMist from "../../public/images/background_2.jpg";
 import { RotatingWord } from "./rotating-word";
+import { ThemeToggle } from "./theme-toggle";
 
 const VEIL_MS = 1700;
+
+const BIRD_SVG =
+  '<svg viewBox="0 0 24 12" fill="currentColor"><path d="M12 7C9.5 2.5 6 1.5 1 4c4.5.5 7 2 9.5 6.5L12 12l1.5-1.5C16 6 18.5 4.5 23 4c-5-2.5-8.5-1.5-11 3z"/></svg>';
 
 type Stage = "hero" | "covering" | "intro" | "leaving";
 
 export function LandingHero() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const wordRef = useRef<HTMLButtonElement>(null);
   const [hovered, setHovered] = useState(false);
   const [stage, setStage] = useState<Stage>("hero");
+  const [hint, setHint] = useState<{ x: number; y: number; text: string; leaving: boolean } | null>(null);
+  const clickCount = useRef(0);
+  const hintTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const veilOn = stage === "covering" || stage === "leaving";
   const busy = stage !== "hero";
@@ -38,8 +47,69 @@ export function LandingHero() {
     setTimeout(() => router.push("/way"), VEIL_MS);
   }
 
+  function launchBird(sx: number, sy: number, ex: number, ey: number, duration: number) {
+    const section = sectionRef.current;
+    if (!section) return;
+    const bird = document.createElement("span");
+    bird.className = "hero-bird";
+    bird.innerHTML = BIRD_SVG;
+    section.appendChild(bird);
+
+    const tilt = Math.max(-16, Math.min(16, ((ey - sy) / (ex - sx || 1)) * 20));
+    const mx = sx + (ex - sx) * 0.5;
+    const my = sy + (ey - sy) * 0.5 - 80;
+    const anim = bird.animate(
+      [
+        { transform: `translate(${sx}px, ${sy}px) rotate(${tilt}deg)`, opacity: 0 },
+        { opacity: 1, offset: 0.08 },
+        { transform: `translate(${mx}px, ${my}px) rotate(${tilt / 2}deg)`, offset: 0.5 },
+        { opacity: 1, offset: 0.88 },
+        { transform: `translate(${ex}px, ${ey}px) rotate(0deg) scale(0.5)`, opacity: 0 },
+      ],
+      { duration, easing: "cubic-bezier(0.45, 0, 0.25, 1)" },
+    );
+    anim.onfinish = () => bird.remove();
+  }
+
+  function showHint(x: number, y: number, text: string) {
+    hintTimers.current.forEach(clearTimeout);
+    setHint({ x, y, text, leaving: false });
+    hintTimers.current = [
+      setTimeout(() => setHint((h) => (h ? { ...h, leaving: true } : h)), 4300),
+      setTimeout(() => setHint(null), 5200),
+    ];
+  }
+
+  function spawnBird(e: React.MouseEvent) {
+    if (stage !== "hero") return;
+    if ((e.target as HTMLElement).closest(".word-gateway, .theme-toggle")) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const section = sectionRef.current;
+    const word = wordRef.current;
+    if (!section || !word) return;
+
+    const rect = section.getBoundingClientRect();
+    const w = word.getBoundingClientRect();
+    const sx = e.clientX - rect.left;
+    const sy = e.clientY - rect.top;
+    const ex = w.left + w.width / 2 - rect.left;
+    const ey = w.top + w.height / 2 - rect.top - 8;
+
+    for (let i = 0; i < 3; i++) {
+      const jx = sx + (i === 0 ? 0 : i === 1 ? -42 : 38);
+      const jy = sy + (i === 0 ? 0 : i === 1 ? 26 : -22);
+      setTimeout(() => launchBird(jx, jy, ex, ey, 3400 + i * 300), i * 320);
+    }
+
+    clickCount.current += 1;
+    if (clickCount.current === 3) showHint(sx, sy, "wonder where i'm flying to?");
+    else if (clickCount.current === 6) showHint(sx, sy, "click on the center…?");
+  }
+
   return (
     <section
+      ref={sectionRef}
+      onClick={spawnBird}
       className={`relative min-h-screen overflow-hidden ${stage === "covering" ? "hero-leaving" : ""}`}
     >
       <div className="hero-photo absolute inset-0">
@@ -67,6 +137,7 @@ export function LandingHero() {
         </p>
         <p className="card-in relative mt-5 font-display text-4xl italic leading-none md:mt-8 md:text-5xl">
           <button
+            ref={wordRef}
             type="button"
             onClick={enter}
             onMouseEnter={() => setHovered(true)}
@@ -113,7 +184,18 @@ export function LandingHero() {
         />
       </div>
 
+      {hint && (
+        <span
+          className={`hint-cloud ${hint.leaving ? "hint-cloud-leaving" : ""}`}
+          style={{ left: hint.x, top: hint.y }}
+        >
+          {hint.text}
+        </span>
+      )}
+
       <div className={`hero-veil ${veilOn ? "hero-veil-on" : ""}`} aria-hidden="true" />
+
+      {stage === "hero" && <ThemeToggle />}
     </section>
   );
 }
