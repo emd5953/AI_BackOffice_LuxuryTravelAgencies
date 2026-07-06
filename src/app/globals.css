@@ -402,6 +402,34 @@ body::before {
   animation: fade-up 1.2s ease-out 0.9s both;
 }
 
+.way-enter {
+  animation: fade-up 1.2s ease-out 1.7s both;
+}
+
+/* Studio: the village stays as the backdrop, veiled in parchment so panels read */
+.studio-scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.studio-fade {
+  animation: fade-up 0.9s ease-out 0.15s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-fade {
+    animation: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .way-enter:hover .way-enter-arrow {
+    transform: translateX(6px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .word-gateway,
   .hero-photo,
