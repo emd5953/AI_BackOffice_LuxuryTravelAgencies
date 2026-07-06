@@ -1,23 +1,25 @@
 @import "tailwindcss";
 
+/* Palette derived from the Tuscan-dawn reference photo:
+   apricot sky, rose-tan ridges, olive-gold hills, cream mist */
 :root {
-  --surface: #faf5ec;
-  --surface-raised: #ffffff;
-  --ink: #2a2018;
-  --ink-muted: #93826f;
-  --hairline: #eadfce;
-  --accent: #b36a2e;
-  --accent-soft: #f7e7cf;
-  --positive: #4a6b4f;
-  --warn: #9a6a1f;
-  --warn-soft: #f6ebd6;
-  --danger: #8c3b2e;
+  --surface: #f3e6c8;
+  --surface-raised: #fdf6e4;
+  --ink: #4a3d24;
+  --ink-muted: #94804f;
+  --hairline: #e2cfa0;
+  --accent: #d97f3a;
+  --accent-soft: #fae3c0;
+  --positive: #75784a;
+  --warn: #a1761f;
+  --warn-soft: #f1e3b8;
+  --danger: #a14b2c;
 
-  --dot-color: #dfd3be;
-  --sunset-glow-alpha: 0.18;
+  --dot-color: #e0cd9e;
+  --sunset-glow-alpha: 0.34;
 
-  --shadow-float: 0 1px 2px rgba(42, 32, 24, 0.05), 0 10px 30px -8px rgba(42, 32, 24, 0.12);
-  --shadow-lift: 0 2px 4px rgba(42, 32, 24, 0.06), 0 18px 44px -10px rgba(42, 32, 24, 0.18);
+  --shadow-float: 0 1px 2px rgba(61, 52, 35, 0.05), 0 10px 30px -8px rgba(61, 52, 35, 0.12);
+  --shadow-lift: 0 2px 4px rgba(61, 52, 35, 0.06), 0 18px 44px -10px rgba(61, 52, 35, 0.18);
 }
 
 @theme inline {
@@ -41,17 +43,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --surface: #1b1611;
-    --surface-raised: #251e17;
-    --ink: #f0e7da;
-    --ink-muted: #a5947f;
-    --hairline: #3a3128;
-    --accent: #d99355;
-    --accent-soft: #372817;
-    --warn-soft: #2f2618;
+    --surface: #261d0e;
+    --surface-raised: #332712;
+    --ink: #f4e6c0;
+    --ink-muted: #b3a06e;
+    --hairline: #46381d;
+    --accent: #e8a256;
+    --accent-soft: #46320f;
+    --warn-soft: #3a2e10;
 
-    --dot-color: #2b241d;
-    --sunset-glow-alpha: 0.1;
+    --dot-color: #322812;
+    --sunset-glow-alpha: 0.16;
 
     --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 30px -8px rgba(0, 0, 0, 0.5);
     --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.4), 0 18px 44px -10px rgba(0, 0, 0, 0.6);
@@ -75,7 +77,7 @@ body::before {
   pointer-events: none;
   background: radial-gradient(
     80% 50% at 50% -10%,
-    rgba(217, 154, 78, var(--sunset-glow-alpha)),
+    rgba(232, 166, 92, var(--sunset-glow-alpha)),
     transparent 70%
   );
 }
@@ -132,124 +134,49 @@ body::before {
   }
 }
 
-/* Landing hero: placeholder golden-hour scene — swap for a photographed background when available */
-.landing-sky {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, #e8935a 0%, #ec9c63 20%, #e2884f 42%, #d97f48 58%, #e8c896 78%, #eee2c8 100%);
-}
-
-.landing-glow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    28% 20% at 50% 10%,
-    rgba(255, 244, 214, 0.95),
-    rgba(240, 168, 104, 0) 70%
-  );
-  animation: sunset-breathe 14s ease-in-out infinite alternate;
-}
-
-.landing-mountains {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    transparent 25%,
-    rgba(150, 130, 165, 0.28) 45%,
-    rgba(150, 130, 165, 0.15) 60%,
-    transparent 75%
-  );
-}
-
-.landing-hill-1,
-.landing-hill-2,
-.landing-hill-3 {
-  position: absolute;
-  left: -10%;
-  width: 120%;
-  border-radius: 100% 100% 0 0 / 220px;
-}
-
-.landing-hill-1 {
-  bottom: -4%;
-  height: 34%;
-  background: rgba(217, 185, 140, 0.5);
-}
-
-.landing-hill-2 {
-  bottom: -6%;
-  left: -15%;
-  width: 130%;
-  height: 26%;
-  background: rgba(196, 161, 118, 0.65);
-}
-
-.landing-hill-3 {
-  bottom: -8%;
-  height: 18%;
-  background: rgba(169, 136, 94, 0.8);
-}
-
-.landing-fog {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 55%, rgba(239, 231, 216, 0.55) 100%);
-}
-
-@keyframes sunset-breathe {
+/* Hero rotating word: letters type on with a soft fade, whole word fades out */
+@keyframes letter-fade-in {
   from {
-    transform: scale(1);
-    opacity: 0.9;
+    opacity: 0;
+    filter: blur(3px);
   }
   to {
-    transform: scale(1.05);
     opacity: 1;
+    filter: blur(0);
   }
+}
+
+.letter-in {
+  opacity: 0;
+  animation: letter-fade-in 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes word-fade-out {
+  to {
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+
+.word-out {
+  animation: word-fade-out 0.5s ease forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-glow {
+  .letter-in {
+    animation: none;
+    opacity: 1;
+  }
+  .word-out {
     animation: none;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .landing-sky {
-    background: linear-gradient(180deg, #8a5a33 0%, #5c3f2b 40%, #3a2a22 100%);
-  }
-
-  .landing-glow {
-    background: radial-gradient(
-      45% 35% at 50% 18%,
-      rgba(200, 150, 100, 0.35),
-      rgba(138, 90, 51, 0) 70%
-    );
-  }
-
-  .landing-mountains {
-    background: linear-gradient(
-      180deg,
-      transparent 25%,
-      rgba(70, 55, 90, 0.35) 45%,
-      rgba(70, 55, 90, 0.2) 60%,
-      transparent 75%
-    );
-  }
-
-  .landing-hill-1 {
-    background: rgba(90, 68, 48, 0.55);
-  }
-
-  .landing-hill-2 {
-    background: rgba(66, 48, 34, 0.7);
-  }
-
-  .landing-hill-3 {
-    background: rgba(42, 30, 22, 0.85);
-  }
-
-  .landing-fog {
-    background: linear-gradient(180deg, transparent, rgba(58, 42, 34, 0.5));
-  }
+/* Landing hero: warm scrim over the photograph so headline text stays legible */
+.landing-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 45% at 50% 52%, rgba(74, 61, 36, 0.22), transparent 75%),
+    linear-gradient(180deg, rgba(74, 61, 36, 0.12), transparent 30%, transparent 78%, rgba(74, 61, 36, 0.28) 100%);
 }
