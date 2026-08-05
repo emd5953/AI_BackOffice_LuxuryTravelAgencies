@@ -1,8 +1,5 @@
 # AI Back Office for Luxury Travel Designers
 
-**Live: [ai-back-office-analogue.vercel.app](https://ai-back-office-analogue.vercel.app)**
-** Off Now **
-
 Luxury travel designers sell judgment and taste — but spend their days on coordination: answering repetitive email, chasing lodges for rates, re-typing quotes into comparisons, and remembering that a client mentioned Patagonia six months ago. This is a working agentic back office that takes the first pass at all of it.
 
 **The core pattern: drafts, not blanks.** Agents do the first pass on everything; the designer keeps the send button.
