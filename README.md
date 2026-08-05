@@ -1,6 +1,7 @@
-# Analogue — AI Back Office for Luxury Travel Designers
+# AI Back Office for Luxury Travel Designers
 
 **Live: [ai-back-office-analogue.vercel.app](https://ai-back-office-analogue.vercel.app)**
+** Off Now **
 
 Luxury travel designers sell judgment and taste — but spend their days on coordination: answering repetitive email, chasing lodges for rates, re-typing quotes into comparisons, and remembering that a client mentioned Patagonia six months ago. This is a working agentic back office that takes the first pass at all of it.
 
@@ -62,6 +63,4 @@ npm run eval:parse           # golden extraction suite (live API)
 npm run eval:grounding       # LLM-judge draft grounding (live API)
 ```
 
-## Why this exists
 
-Built as a working study of the skills in [Analogue](https://travelanalogue.com)'s founding-engineer role: agentic workflows with real human oversight, structured outputs, retrieval, evals, and the long tail of cases where the model gets it wrong — learned by shipping them, not reading about them. The demo agency (Meridian Private Travel), its designer Elena, and all client data are fictional.
