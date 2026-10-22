@@ -1,21 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+function subscribe(listener: () => void) {
+  const observer = new MutationObserver(listener);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+  const query = window.matchMedia("(prefers-color-scheme: dark)");
+  query.addEventListener("change", listener);
+  return () => {
+    observer.disconnect();
+    query.removeEventListener("change", listener);
+  };
+}
+function snapshot() {
+  const theme = document.documentElement.dataset.theme;
+  return theme
+    ? theme === "dark"
+    : window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
 
 export function ThemeToggle() {
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("analogue-theme");
-    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setDark(stored ? stored === "dark" : systemDark);
-  }, []);
+  const dark = useSyncExternalStore(subscribe, snapshot, () => false);
 
   function toggle() {
     const next = !dark;
-    setDark(next);
     document.documentElement.dataset.theme = next ? "dark" : "light";
-    localStorage.setItem("analogue-theme", next ? "dark" : "light");
+    try {
+      localStorage.setItem("analogue-theme", next ? "dark" : "light");
+    } catch {
+      /* Theme still applies when storage is unavailable. */
+    }
   }
 
   return (
@@ -33,7 +50,9 @@ export function ThemeToggle() {
           strokeWidth="2"
           strokeLinecap="round"
           className={`absolute inset-0 transition-all duration-700 ease-out ${
-            dark ? "scale-50 rotate-90 opacity-0" : "scale-100 rotate-0 opacity-100"
+            dark
+              ? "scale-50 rotate-90 opacity-0"
+              : "scale-100 rotate-0 opacity-100"
           }`}
         >
           <circle cx="12" cy="12" r="4.5" fill="currentColor" stroke="none" />
@@ -43,7 +62,9 @@ export function ThemeToggle() {
           viewBox="0 0 24 24"
           fill="currentColor"
           className={`absolute inset-0 transition-all duration-700 ease-out ${
-            dark ? "scale-100 rotate-0 opacity-100" : "scale-50 -rotate-90 opacity-0"
+            dark
+              ? "scale-100 rotate-0 opacity-100"
+              : "scale-50 -rotate-90 opacity-0"
           }`}
         >
           <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" />

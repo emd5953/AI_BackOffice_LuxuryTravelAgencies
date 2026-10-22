@@ -64,7 +64,7 @@ export function DraftPanel({
     <div className="space-y-3 border-t border-hairline p-4">
       <div className="flex items-center gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          Agent draft — review before sending
+          Agent draft — internal approval only; delivery is not connected
         </span>
       </div>
 
@@ -96,7 +96,7 @@ export function DraftPanel({
           disabled={isPending || body.trim().length === 0}
           className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-white shadow-float transition hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
         >
-          {isPending ? "Sending…" : "Approve & send"}
+          {isPending ? "Saving…" : "Approve draft (not sent)"}
         </button>
         <button
           onClick={() => run(() => dismissDraft(draft.id))}

@@ -1,63 +1,58 @@
-# AI Back Office for Luxury Travel Designers
+# Analogue — a conversation-first travel back office
 
-Luxury travel designers sell judgment and taste — but spend their days on coordination: answering repetitive email, chasing lodges for rates, re-typing quotes into comparisons, and remembering that a client mentioned Patagonia six months ago. This is a working agentic back office that takes the first pass at all of it.
+Luxury travel work arrives as client emails, supplier confirmations, PDF attachments, and WhatsApp requests. **`/operations` turns those sources into a reviewable trip record and internal handoff.** It preserves evidence, keeps AI interpretations pending human review, and never sends messages or changes bookings.
 
-**The core pattern: drafts, not blanks.** Agents do the first pass on everything; the designer keeps the send button.
+This is a **single-agency local pilot**, not a production multi-tenant system. No real client data is preloaded. The sample is synthetic; Mews data comes from its official public demo. See [workflow research](docs/agency-workflows.md) and [integration setup](docs/operations-setup.md).
 
-![Architecture diagram](docs/agent_architecture.png)
+## Run
 
-## What it does
-
-| Surface | The agent's first pass | The designer's decision |
-|---|---|---|
-| **Today** (`/today`) | Scans the whole book of business and surfaces deadlines, stale threads, and blockers — resolving relative dates like *"can hold till Friday"* against when the email arrived, with every claim citing its source | Done / dismiss (dismissals are remembered across regenerations) |
-| **Inbox** (`/inbox`) | Drafts client replies grounded in the full client record — call notes, intake forms, preferences — and self-reports what it couldn't verify into a "needs your judgment" panel | Edit, approve & send, or dismiss |
-| **Quotes** (`/trips/[id]/quotes`) | Parses messy supplier emails into a normalized rate comparison — European decimals (`USD 1.890` = $1,890), per-person vs per-room scopes, NET vs gross, buried promos and hold deadlines | Reads a table where every number shows its arithmetic and every assumption is a visible ⚠ warning |
-| **Clients** (`/clients/[id]`) | Semantic memory search over everything known about a client — "boats" finds *"Sarah: no boats"* from a call note | Browses preferences labeled confirmed vs inferred, each traceable to its source |
-| **Dashboard** (`/dashboard`) | — | Cost/latency/token telemetry per agent, draft acceptance rate and edit distance, latest eval results |
-
-## The trust architecture
-
-This is the part that matters in production:
-
-- **Agents cannot act on the outside world.** The drafting agent can only create `pending` rows; the single send path is a human-triggered action with an atomic claim (a concurrency race here was found by adversarial review and fixed with a regression test — two simultaneous approvals produce exactly one send).
-- **The model extracts; the code computes.** Rate totals are deterministic TypeScript that prints its own formula and refuses to guess — party size unknown means a dash and a warning, never a silently wrong number.
-- **Everything cites its provenance.** Preferences carry confirmed/inferred labels and source references; every quote row links to the exact email it came from; every draft stores the exact context the model saw (`promptContext`), so a bad draft decomposes into "retrieval missed the fact" vs "the model ignored it."
-- **Evals are load-bearing.** A 21-assertion golden suite re-runs extraction on trap emails before any prompt change ships; an LLM-judge grounding eval verifies draft claims against stored context. First judge run scored a good draft 0.50 by over-flagging general knowledge — documented, not hidden: [who evals the eval](docs/senior-reviews.md).
-
-## Numbers (first live runs)
-
-- Golden extraction suite: **21/21** — including the `USD 1.890` European-decimal trap and per-person-scope pricing
-- Draft generation: **~$0.025, ~13s** · quote extraction: **~$0.025/email** · Haiku grounding judge: **~$0.003/draft**
-- A designer-day at realistic volume (20 drafts + 10 extractions): **well under $1**
-
-## Stack
-
-Next.js 16 (App Router, server actions) · TypeScript · Tailwind v4 · Drizzle ORM · Supabase Postgres (transaction pooler, `prepare: false`) · `claude-opus-4-8` with adaptive thinking + structured outputs (Zod) · Voyage `voyage-4` embeddings with brute-force cosine retrieval (a vector DB at 20 chunks would be résumé-driven engineering) · Vercel
-
-## The engineering story
-
-The interesting artifacts are in `docs/`:
-
-- **[senior-reviews.md](docs/senior-reviews.md)** — every phase's design decisions in defend-this-in-an-interview form: provenance columns, columns-vs-blobs, the check-then-act race, prompt-injection posture ("model warnings are UX, not a security boundary"), the Postgres migration measured against the "cheap to reverse" claim
-- **[project-journal.md](docs/project-journal.md)** — the narrative build log
-- **[sessions/](docs/sessions/)** — the full, readable transcripts of the AI-orchestrated build: one model planning and reviewing, subagents implementing from self-contained specs, an adversarial cold-context reviewer that found 10 real findings (2 HIGH)
-
-## Running locally
+Requires Node **24 or newer** (built-in SQLite).
 
 ```sh
-npm install
-# .env.local:
-#   ANTHROPIC_API_KEY=...   (agents)
-#   VOYAGE_API_KEY=...      (embeddings)
-#   DATABASE_URL=...        (Postgres, pooled)
-#   DIRECT_URL=...          (Postgres, direct/session — for schema pushes)
-npm run db:push && npm run db:seed
-npm run index-context        # embed client context
-npm run dev                  # → localhost:3000
-
-npm run eval:parse           # golden extraction suite (live API)
-npm run eval:grounding       # LLM-judge draft grounding (live API)
+npm ci
+cp .env.example .env.local
+npm run dev
+# http://127.0.0.1:3000/operations
 ```
 
+No database server or API key is required for file imports, manual review, or the sample. State persists in `.data/operations.sqlite`, excluded from Git. Before hosting, set a random `OPS_ACCESS_TOKEN` of at least 32 characters; production access fails closed without it. Use HTTPS and persistent private storage. This shared-operator gate does not provide individual staff roles.
 
+## Try it
+
+1. Set `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` in `.env.local`, using a model available to your account that supports structured outputs, and restart the server.
+2. **Sources & imports → Try email + PDF + WhatsApp sample.** Loads two fictional supplier emails, an actual attached PDF voucher, and two WhatsApp messages through the real parsers. Only the CRM trip identity is seeded: there are **zero pre-entered operational facts**. When configured, AI analysis starts automatically. Without credentials, only raw evidence loads; click **Analyze evidence** after connecting the model.
+3. AI quotes facts, connects four sources by agency reference, attachment or reservation reference, and leaves the namesake message unmatched. The provisional details and handoff update automatically. Expected checks: email/PDF arrival-date conflict, missing flight, pending transfer and deposit, an experience on hold, and unconfirmed client changes. No manual field entry or acceptance is needed for checks.
+4. Edit the internal follow-up, acknowledge open issues, and approve. Download the JSON handoff and evidence snapshot. **Nothing is sent.** Changed evidence or reviewed fields invalidate approval for export.
+5. **Read official demo reservations** tests Mews. Those sandbox trips remain separate from the invented scenario.
+
+## Boundaries
+
+| Source | Implemented | Still requires / out of scope |
+|---|---|---|
+| Email files | `.eml`, MIME, original IDs/headers, text and PDF attachment pages | Authenticity verification, OCR, voice, Office files and large attachments |
+| Gmail | Exact thread read, account check, plain/HTML text and attachments | Authorized `gmail.readonly` token; no OAuth sign-in/refresh or background sync |
+| WhatsApp | Twilio inbound signatures/account/recipient checks, deduplication, phone matching | Official sandbox setup and joined participant; no history scraping or outbound messages |
+| Spreadsheets | Validated CSV rows with source locations; Sheets CSV exports | Direct Sheets OAuth sync and XLSX |
+| Mews | Latest 10 official-demo reservations, current API fields | Full synchronization and authorized production property access |
+| Travefy | Exact partner-identifier trip lookup | Provisioned platform/user credentials; CRM/service ingestion and writeback |
+| AI | Batch Anthropic extraction, quoted fields, automatic matching, provisional details/checks, per-source retry | Credentials/model access; offline contract tests do not establish live model quality |
+
+The sample has **no pre-generated AI output or runtime mock mode**. Tests inject an explicitly labeled model double. Runtime extraction always calls Anthropic. AI proposals inform deterministic checks immediately, while remaining clearly separate from reviewed facts. Client requests and unknown values do not become confirmed details. Service-specific comparisons use reservation references; unscoped/multi-room records still need judgment.
+
+Raw examples are in [public/examples/extraction](public/examples/extraction): two `.eml` files, the PDF voucher and inbound WhatsApp fixture payloads. Rebuild with `python scripts/create-extraction-fixtures.py` (ReportLab). Scanned PDFs and voice notes remain explicit limitations.
+
+## Validate
+
+```sh
+npm run test:operations
+npm run validate:extraction # real model, synthetic data, isolated temporary database
+npm run validate:sandbox
+npm run lint
+npm run build
+```
+
+The extraction validator writes `docs/validation/ai-extraction.json` only after a real model run passes the scenario checks. The Mews validator records counts/IDs/hashes in [docs/validation/mews-sandbox.json](docs/validation/mews-sandbox.json). Offline regression tests are not evidence of live provider connectivity.
+
+## Earlier prototype
+
+`/today`, `/inbox`, `/clients`, and `/dashboard` are the older Postgres/Drizzle prototype and need separate configuration. Their seed is fictional. The fake email-send path was removed: legacy approval is internal only. Destructive seeding requires `SEED_SYNTHETIC=1` on a dedicated demo database. Historical cost/eval claims in journal files describe earlier experiments, not current integration validation.

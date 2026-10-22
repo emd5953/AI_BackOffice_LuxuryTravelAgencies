@@ -1,0 +1,33 @@
+From: Yuki at Sample Ryokan <reservations@example.invalid>
+To: Maya at Sample Travel <advisor@example.invalid>
+Subject: SYNTHETIC: Reed garden suite confirmation
+Message-ID: <synthetic-reed-supplier-01@example.invalid>
+Date: Thu, 22 Oct 2026 13:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="analogue-synthetic-boundary"
+
+--analogue-synthetic-boundary
+Content-Type: text/plain; charset=utf-8
+
+SYNTHETIC TEST FIXTURE. All people, properties and reservations are invented.
+
+Dear Maya,
+
+Delighted to confirm the garden suite for Alex Reed and guest, arriving 14 March 2027 and departing 19 March 2027. Your confirmation is SYN-RYOKAN-84.
+
+Breakfast is included. Please send the arrival flight before we confirm the transfer. The deposit is still outstanding.
+
+Warm regards,
+Yuki - Sample Ryokan reservations
+
+trip_ref: SYN-KYO-01
+
+--analogue-synthetic-boundary
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: attachment; filename="synthetic-arrival-instructions.txt"
+
+SYNTHETIC ATTACHMENT - no actual hotel or driver.
+
+The driver has not been allocated. Please advise arrival flight, luggage count and any child-seat requirement. These instructions are not a confirmed transfer voucher.
+
+--analogue-synthetic-boundary--

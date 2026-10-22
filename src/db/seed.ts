@@ -31,6 +31,7 @@ function daysAgo(n: number, hour = 10): Date {
 }
 
 async function seed() {
+  if (process.env.SEED_SYNTHETIC !== "1") throw new Error("This seed deletes legacy data and inserts fictional records. Use a dedicated demo database and explicitly set SEED_SYNTHETIC=1.");
   const { db } = await import("./index");
 
   // Idempotent: wipe in FK-safe order

@@ -13,7 +13,7 @@ export function WayContent() {
     e.preventDefault();
     if (leaving) return;
     setLeaving(true);
-    setTimeout(() => router.push("/today"), FADE_MS);
+    setTimeout(() => router.push("/operations"), FADE_MS);
   }
 
   return (
@@ -29,7 +29,7 @@ export function WayContent() {
         Built for the designers who know the way.
       </p>
       <a
-        href="/today"
+        href="/operations"
         onClick={openStudio}
         className="way-enter mt-8 inline-block font-display text-lg text-[#fdf7e7]/85 transition-colors duration-300 hover:text-[#fdf7e7] md:text-xl"
         style={{ textShadow: "0 1px 3px rgba(61, 52, 35, 0.5)" }}

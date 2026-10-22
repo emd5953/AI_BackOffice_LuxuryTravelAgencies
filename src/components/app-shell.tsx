@@ -8,7 +8,8 @@ import { NAV_ITEMS } from "@/lib/nav-items";
 import hillTown from "../../public/images/background_1.jpeg";
 
 function isActive(pathname: string, href: string) {
-  if (href === "/today") return pathname === "/today" || pathname.startsWith("/today/");
+  if (href === "/today")
+    return pathname === "/today" || pathname.startsWith("/today/");
   return pathname.startsWith(href);
 }
 
@@ -20,7 +21,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     day: "numeric",
   });
 
-  if (pathname === "/" || pathname === "/way") {
+  if (
+    pathname === "/" ||
+    pathname === "/way" ||
+    pathname.startsWith("/operations")
+  ) {
     return <>{children}</>;
   }
 
@@ -38,7 +43,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <div className="fixed top-4 left-4 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-1 overflow-x-auto rounded-full bg-surface-raised px-2 py-1.5 shadow-float">
-        <Link href="/today" className="shrink-0 px-2 font-display text-base text-ink">
+        <Link
+          href="/today"
+          className="shrink-0 px-2 font-display text-base text-ink"
+        >
           Analogue
         </Link>
         <span className="h-4 w-px shrink-0 bg-hairline" />
@@ -66,7 +74,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         {today}
       </div>
 
-      <main className="studio-fade mx-auto max-w-5xl px-6 pt-24 pb-16">{children}</main>
+      <main className="studio-fade mx-auto max-w-5xl px-6 pt-24 pb-16">
+        <p className="mb-5 rounded-xl bg-warn-soft px-4 py-3 text-xs text-warn">
+          Legacy workspace: the repository seed is fictional and email delivery
+          is not connected. Open Operations for the conversation workflow.
+        </p>
+        {children}
+      </main>
     </>
   );
 }

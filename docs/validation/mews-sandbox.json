@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-10-22T13:51:22.956Z",
+  "endpoint": "https://api.mews-demo.com/api/connector/v1/reservations/getAll/2023-06-06",
+  "environment": "official-public-demo",
+  "operation": "read-only latest 10 reservations",
+  "recordCount": 10,
+  "hasMore": true,
+  "records": [
+    {
+      "externalId": "4ed111a6-9b37-4c46-841e-fffc05d80da5",
+      "digest": "e94b5760ccc134383ba15a257356070f8bbe25dd9629857affe08828acef7d5c",
+      "sourceTimestamp": "2026-10-18T18:01:17Z"
+    },
+    {
+      "externalId": "6d0deea9-2c4d-4acc-9094-fff02dada54e",
+      "digest": "dea2d7736c6ab95b14640b3d25122ed70443218e153d9cba32546adc0777c0cb",
+      "sourceTimestamp": "2026-01-13T23:49:34Z"
+    },
+    {
+      "externalId": "d8130b91-ee13-419a-9c88-ffc955c0274e",
+      "digest": "e0d74e623d16aeeead0c838dcdd9438478a586c6f9353a3863c8b52526f3c1bc",
+      "sourceTimestamp": "2026-01-13T23:51:28Z"
+    },
+    {
+      "externalId": "6a2cc749-0dc7-47c1-b289-ffbb951d1be6",
+      "digest": "d5d004fde9c6f9746f3a39ed1baf65afa819d8c670d59aa934f438886338be41",
+      "sourceTimestamp": "2026-01-13T23:43:17Z"
+    },
+    {
+      "externalId": "a0c49267-ce35-4b2a-a40b-ffbb85bfb898",
+      "digest": "2a84d619e227cf2dcfa4f5ff2ae1848ee36ae519d671c14298b2ffd077741db1",
+      "sourceTimestamp": "2026-01-13T23:53:56Z"
+    },
+    {
+      "externalId": "ed188a55-5555-449d-b0fc-ffab0dcf4004",
+      "digest": "35b6b11a1dc2376a6d6c9a20751e6abd1625cf9c88eaf2211f658e0a4fabdc6e",
+      "sourceTimestamp": "2025-12-22T04:09:15Z"
+    },
+    {
+      "externalId": "06897e9c-0eea-403e-8431-ffa38e95c90a",
+      "digest": "1c640c4ea2a72f94502864dfe714614983da704845181dd3554e173f1dac6883",
+      "sourceTimestamp": "2026-01-13T23:32:46Z"
+    },
+    {
+      "externalId": "0a39d59b-72e5-4eda-abbe-ff95de14841b",
+      "digest": "ec2a0a5c370c6ca6254fb05f5157dda60c91882119032ea90ad9a110fb11947e",
+      "sourceTimestamp": "2026-01-13T23:56:27Z"
+    },
+    {
+      "externalId": "7cc04750-5be0-4b90-a85b-ff92fa0f0a21",
+      "digest": "29157256c4f714d8c24408fbb16dd488446db30b2ab509cef498f9dc7715e72d",
+      "sourceTimestamp": "2018-08-03T04:04:05Z"
+    },
+    {
+      "externalId": "5f8de213-3f2b-4d96-901f-ff92b49012d3",
+      "digest": "d2480953bab49be815181925e652628ce5143b3a8b0d55e1c290b432dcd83dd4",
+      "sourceTimestamp": "2026-07-12T21:17:56Z"
+    }
+  ],
+  "limitations": "Bounded sample; not a full sync. Sandbox records cannot confirm real agency bookings."
+}

@@ -26,15 +26,18 @@ export function RotatingWord({ paused = false }: { paused?: boolean }) {
 
   useEffect(() => {
     if (paused) {
-      setExiting(false);
-      return;
+      const frame = requestAnimationFrame(() => setExiting(false));
+      return () => cancelAnimationFrame(frame);
     }
     const typeMs = word.length * LETTER_STAGGER_MS + LETTER_FADE_MS;
     const exitTimer = setTimeout(() => setExiting(true), typeMs + HOLD_MS);
-    const nextTimer = setTimeout(() => {
-      setExiting(false);
-      setIndex((i) => (i + 1) % WORDS.length);
-    }, typeMs + HOLD_MS + EXIT_MS);
+    const nextTimer = setTimeout(
+      () => {
+        setExiting(false);
+        setIndex((i) => (i + 1) % WORDS.length);
+      },
+      typeMs + HOLD_MS + EXIT_MS,
+    );
     return () => {
       clearTimeout(exitTimer);
       clearTimeout(nextTimer);
